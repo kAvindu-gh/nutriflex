@@ -1,0 +1,21 @@
+# --- Python (Backend) ---
+**/__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.pytest_cache/
+
+# --- Flutter (Frontend) ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+ios/Flutter/Generated.xcconfig
+android/key.properties
+
+# --- General ---
+.DS_Store
+.vscode/
+.idea/
