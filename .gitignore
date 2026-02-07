@@ -1,6 +1,23 @@
-# Backend files 
-firebase_key.json
+# --- Python (Backend) ---
+**/__pycache__/
+*.py[cod]
+*$py.class
+venv/
 .env
-venv
-__pycache__
+.pytest_cache/
+firebase_key.json
 __init__.
+
+# --- Flutter (Frontend) ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+ios/Flutter/Generated.xcconfig
+android/key.properties
+
+# --- General ---
+.DS_Store
+.vscode/
+.idea/
