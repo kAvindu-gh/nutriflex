@@ -17,7 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include ONLY BMI and USDA
+# Include ONLY BMI and USDA as routes
 app.include_router(bmi.router)
 app.include_router(usda.router)
 
