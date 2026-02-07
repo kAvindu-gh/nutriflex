@@ -1,0 +1,28 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from .routers import bmi, usda  
+
+app = FastAPI(
+    title="NutriFlex API",
+    description="BMI Calculator + USDA Food Database",
+    version="1.0.0"
+)
+
+# CORS for the frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include ONLY BMI and USDA
+app.include_router(bmi.router)
+app.include_router(usda.router)
+
+@app.get("/")
+async def root():
+    return {
+        "message": "NutriFlex API - BMI + USDA Food Database",
+    }
