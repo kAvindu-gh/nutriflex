@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,10 +10,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'NutriFlex',
       debugShowCheckedModeBanner: false,
-      title: 'Fitness App',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        fontFamily: 'Inter',
+        scaffoldBackgroundColor: Colors.black, // Set global scaffold background to black
       ),
       home: const LoginPage(),
     );
@@ -29,180 +30,127 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // GlobalKey for the form to manage validation
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
-  // Controllers to read the text for password comparison
-  final TextEditingController _passController = TextEditingController();
-  final TextEditingController _confirmPassController = TextEditingController();
-
-  // State variable to toggle password visibility
-  bool _isPasswordVisible = false;
+  // Custom Colors from your Figma design
+  final Color primaryGreen = const Color(0xFF1ED760); 
+  final Color fieldFill = Colors.white.withOpacity(0.1);
 
   @override
   void dispose() {
-    // Clean up controllers when the widget is removed
-    _passController.dispose();
-    _confirmPassController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: Colors.black, // Solid black background
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Form(
-              key: _formKey, // Link the form key here
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 50),
-
-                  // Back button
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.green, width: 1.5),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.green),
-                      onPressed: () => Navigator.maybePop(context),
-                    ),
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 60),
+                
+                // NutriFlex Logo Icon
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: primaryGreen,
+                    borderRadius: BorderRadius.circular(20),
                   ),
+                  child: const Icon(Icons.restaurant, size: 40, color: Colors.white),
+                ),
+                const SizedBox(height: 24),
+                
+                const Text(
+                  "Welcome Back",
+                  style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Sign in to continue your fitness journey",
+                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+                ),
+                const SizedBox(height: 40),
 
-                  const SizedBox(height: 30),
+                // Email Field
+                _buildTextField(
+                  controller: _emailController,
+                  hint: "Email",
+                  icon: Icons.email_outlined,
+                ),
+                const SizedBox(height: 20),
 
-                  const Text(
-                    "Create Account",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
+                // Password Field
+                _buildTextField(
+                  controller: _passwordController,
+                  hint: "Password",
+                  icon: Icons.password_outlined,
+                  isPassword: true,
+                ),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: Text("Forgot Password ?", style: TextStyle(color: primaryGreen)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Sign In Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 0,
                     ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  const Text(
-                    "Start your premium fitness journey",
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Full Name Field
-                  buildTextFormField(
-                    hintText: "Full Name",
-                    icon: Icons.person,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return "Please enter your name";
-                      return null;
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        // Handle logic
+                      }
                     },
+                    child: const Text("Sign in", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
+                ),
 
-                  const SizedBox(height: 16),
+                const SizedBox(height: 30),
+                const Text("or", style: TextStyle(color: Colors.white54)),
+                const SizedBox(height: 30),
 
-                  // Email Field with Regex
-                  buildTextFormField(
-                    hintText: "Email",
-                    icon: Icons.email,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return "Email is required";
-                      final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                      if (!emailRegExp.hasMatch(value)) return "Enter a valid email";
-                      return null;
-                    },
-                  ),
+                // Social Buttons
+                Row(
+                  children: [
+                    Expanded(child: _buildSocialButton("Google")),
+                    const SizedBox(width: 15),
+                    Expanded(child: _buildSocialButton("Apple")),
+                  ],
+                ),
 
-                  const SizedBox(height: 16),
-
-                  // Password Field with Eye Icon
-                  buildTextFormField(
-                    controller: _passController,
-                    hintText: "Password",
-                    icon: Icons.lock,
-                    obscureText: !_isPasswordVisible,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.green,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account? ", style: TextStyle(color: Colors.white70)),
+                    GestureDetector(
+                      onTap: () {},
+                      child: Text("Sign Up", style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold)),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return "Password is required";
-                      if (value.length < 6) return "Min. 6 characters required";
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Confirm Password Field
-                  buildTextFormField(
-                    controller: _confirmPassController,
-                    hintText: "Confirm Password",
-                    icon: Icons.lock_reset,
-                    obscureText: !_isPasswordVisible,
-                    validator: (value) {
-                      if (value != _passController.text) return "Passwords do not match";
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // Submit Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // If validation passes, proceed
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Processing Data...')),
-                          );
-                        }
-                      },
-                      child: const Text(
-                        "Create Account",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  const Center(
-                    child: Text.rich(
-                      TextSpan(
-                        text: "By signing up, you agree to our ",
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                        children: [
-                          TextSpan(
-                            text: "Terms & Privacy",
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -210,43 +158,46 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Refined Helper Method
-  Widget buildTextFormField({
-    required String hintText,
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
     required IconData icon,
-    TextEditingController? controller,
-    Widget? suffixIcon,
-    bool obscureText = false,
-    String? Function(String?)? validator,
+    bool isPassword = false,
   }) {
     return TextFormField(
       controller: controller,
-      validator: validator,
-      obscureText: obscureText,
+      obscureText: isPassword && _obscurePassword,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: const TextStyle(color: Colors.grey),
-        prefixIcon: Icon(icon, color: Colors.green),
-        suffixIcon: suffixIcon,
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white54),
+        prefixIcon: Icon(icon, color: primaryGreen),
+        suffixIcon: isPassword 
+          ? IconButton(
+              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.white54),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ) 
+          : null,
         filled: true,
-        fillColor: const Color(0xFF1A1A1A),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.green),
+        fillColor: fieldFill,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.green, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.red),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton(String label) {
+    return Container(
+      height: 55,
+      decoration: BoxDecoration(
+        color: fieldFill,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Center(
+        child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
       ),
     );
   }
