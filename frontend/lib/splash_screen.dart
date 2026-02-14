@@ -120,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const Text(
               '~ Team Nutrition Navigators',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 14,
                 color: Color(0xFF5C8C7A),
                 fontWeight: FontWeight.w400,
               ),
