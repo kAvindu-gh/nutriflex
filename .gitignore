@@ -5,6 +5,7 @@
 venv/
 .env
 .pytest_cache/
+Custom-firebase-key.json
 
 # --- Flutter (Frontend) ---
 .dart_tool/
