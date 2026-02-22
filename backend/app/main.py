@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import bmi, usda  
+from .routers import bmi, usda, nutrients  
 
 app = FastAPI(
     title="NutriFlex API",
@@ -20,6 +20,7 @@ app.add_middleware(
 # Include ONLY BMI and USDA as routes
 app.include_router(bmi.router)
 app.include_router(usda.router)
+app.include_router(nutrients.router)
 
 @app.get("/")
 async def root():
