@@ -9,8 +9,7 @@ env/
 .env.local
 
 # Firebase credentials
-firebase_key.json
-
+backend/app/database/firebase_key.json
 
 # IDE
 .vscode/
