@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File
 from app.models.user import ProfileUpdate, FieldDelete, UserProfileResponse
 from app.services import profile_service
 
@@ -134,4 +134,20 @@ def delete_field(user_id: str, body: FieldDelete):
     """
     return profile_service.delete_user_field(user_id, body.field)
  
- 
+@router.post(
+    "/{user_id}/upload-picture",
+    response_model=UserProfileResponse,
+    summary="Upload profile picture from local storage"
+)
+async def upload_profile_picture(
+    user_id: str,
+    file: UploadFile = File(..., description="Image file — jpeg, png or webp. Max 5MB.")
+):
+    """
+    Upload a profile picture directly from the user's device.
+
+    - Accepts **jpeg, png, webp**
+    - Maximum size: **5MB**
+    - Saved to Firebase Storage, URL stored in Firestore automatically
+    """
+    return await profile_service.upload_profile_picture(user_id, file)

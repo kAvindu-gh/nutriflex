@@ -1,33 +1,25 @@
 from app.database.firebase import get_db
 from app.models.user import ProfileUpdate
-from fastapi import HTTPException
+from app.utils.image_helper import validate_image
+from app.utils.cloudinary_helper import upload_image_to_cloudinary, delete_image_from_cloudinary
+from fastapi import HTTPException, UploadFile
 from datetime import datetime
 
 
 USERS_COLLECTION = "users"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# GET profile — reads email + fullName from existing 'users' collection,
-# plus any optional fields we've added (mobile, birthday, gender, pic)
-# ─────────────────────────────────────────────────────────────────────────────
 def get_user_profile(user_id: str) -> dict:
     db = get_db()
     doc = db.collection(USERS_COLLECTION).document(user_id).get()
-
     if not doc.exists:
         raise HTTPException(status_code=404, detail="User not found.")
-
     data = doc.to_dict()
-
-    # Remove sensitive / internal fields before returning
     data.pop("password", None)
     data.pop("passwordHash", None)
     data.pop("password_hash", None)
     data.pop("emailVerified", None)
     data.pop("createdAt", None)
-
-    # Ensure optional profile fields always exist in response (even if null)
     return {
         "user_id": user_id,
         "email": data.get("email", ""),
@@ -39,55 +31,67 @@ def get_user_profile(user_id: str) -> dict:
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PATCH — update one or more fields (merges into the existing document)
-# ─────────────────────────────────────────────────────────────────────────────
 def update_user_profile(user_id: str, update_data: ProfileUpdate) -> dict:
     db = get_db()
     user_ref = db.collection(USERS_COLLECTION).document(user_id)
-
     if not user_ref.get().exists:
         raise HTTPException(status_code=404, detail="User not found.")
-
-    # Only include fields that were explicitly sent in the request
     updates = {k: v for k, v in update_data.model_dump().items() if v is not None}
-
     if not updates:
         raise HTTPException(status_code=400, detail="No fields provided to update.")
-
-    # If email is changing, make sure it's not taken by someone else
     if "email" in updates:
         existing = (
             db.collection(USERS_COLLECTION)
             .where("email", "==", updates["email"])
-            .limit(1)
-            .get()
+            .limit(1).get()
         )
         for e in existing:
             if e.id != user_id:
-                raise HTTPException(
-                    status_code=400, detail="Email already in use by another account."
-                )
-
+                raise HTTPException(status_code=400, detail="Email already in use.")
     updates["updatedAt"] = datetime.utcnow().isoformat()
     user_ref.update(updates)
+    return get_user_profile(user_id)
 
+
+def delete_user_field(user_id: str, field: str) -> dict:
+    db = get_db()
+    user_ref = db.collection(USERS_COLLECTION).document(user_id)
+    if not user_ref.get().exists:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    # If deleting profile pic, also remove it from Cloudinary
+    if field == "profile_pic_url":
+        try:
+            delete_image_from_cloudinary(user_id)
+        except Exception:
+            pass  # don't block the delete if Cloudinary fails
+
+    user_ref.update({
+        field: None,
+        "updatedAt": datetime.utcnow().isoformat(),
+    })
     return get_user_profile(user_id)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DELETE field — sets an optional field back to null
-# email and fullName are protected and cannot be deleted
+# UPLOAD profile picture → Cloudinary → save URL to Firestore
 # ─────────────────────────────────────────────────────────────────────────────
-def delete_user_field(user_id: str, field: str) -> dict:
+async def upload_profile_picture(user_id: str, file: UploadFile) -> dict:
     db = get_db()
     user_ref = db.collection(USERS_COLLECTION).document(user_id)
-
     if not user_ref.get().exists:
         raise HTTPException(status_code=404, detail="User not found.")
 
+    # Read and validate
+    contents = await file.read()
+    validate_image(file, contents)
+
+    # Upload to Cloudinary and get URL
+    public_url = upload_image_to_cloudinary(contents, user_id, file.content_type)
+
+    # Save URL to Firestore
     user_ref.update({
-        field: None,
+        "profile_pic_url": public_url,
         "updatedAt": datetime.utcnow().isoformat(),
     })
 
