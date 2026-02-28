@@ -2,11 +2,14 @@
 __pycache__/
 *.pyc
 venv/
-.env
-backend/app/database/firebase_key.json
+env/
 
 # Environment
+.env
 .env.local
+
+# Firebase credentials
+backend/app/database/firebase_key.json
 
 
 # IDE
