@@ -55,7 +55,8 @@ def add_food(access_token:str,food:str, size:int, food_type:str):
 
     # Get the current date
     today = datetime.now().date()
-
+    # Current time
+    time_now = datetime.now().time()
 
 
 
@@ -68,15 +69,25 @@ def add_food(access_token:str,food:str, size:int, food_type:str):
 
         number = float(match.group(1))
         unit = match.group(2)
-
-
+        # If there is no unit
+        if unit==".":
+            per_size_nutrinets[nutrient] = str((number/100)*size)
+        else:
         # store nutrient values according to the size
-        per_size_nutrinets[nutrient] = str((number/100)*size)+unit
+            per_size_nutrinets[nutrient] = str((number/100)*size)+unit
 
     date_doc = str(today)
+    time_doc = str(time_now)
 
     # Path of the database
     doc_ref = user_db.collection("users").document(access_token).collection("Nutrients_history").document(date_doc)
+    # Path of the database to store food name
+    food_doc_ref = user_db.collection("users").document(access_token).collection("Meal_history").document(date_doc+"_"+time_doc)
+    
+    # Adding the food to the firestore
+    food_doc_ref.set({"Food: ": food, "Size: ": size})
+
+
     if not doc_ref:
         return "no"
     # The actual docuent
@@ -108,17 +119,41 @@ def add_food(access_token:str,food:str, size:int, food_type:str):
             current_number = float(current_match.group(1))
             current_unit = current_match.group(2)
 
+            # If there is no unit
+            if unit==".":
+                number+=current_number
+                per_size_nutrinets[nutrient] = str(number)
+
             # check if the user databse contains the same unit as the newly retirved food
-            if unit==current_unit:
+            elif unit==current_unit:
                 number+=current_number
                 # Updating the per_size_nutrients dict with early added food nutrients
                 per_size_nutrinets[nutrient] = str(number)+unit
 
         # Adding the new nutrients numbers
         doc_ref.set(per_size_nutrinets)
+        
 
+def get_calory_amount(access_token):
+    # Get the current date
+    today = datetime.now().date()
 
+    date_doc = str(today)
 
+    # Path of the database
+    doc_ref = user_db.collection("users").document(access_token).collection("Nutrients_history").document(date_doc)
+    
+    if not doc_ref:
+        return "0 kcal"
+    
+    doc = doc_ref.get()
+
+    data = doc.to_dict()
+
+    # Calories amount in kcal
+    calorie_amount = data.get("Energy(kcal)")
+
+    return calorie_amount
 
 
     
@@ -187,25 +222,70 @@ def add_requirements(access_token:str):
     gender = physical_measurements.get("Gender")
     weight = physical_measurements.get("weight")
 
+    
+
     if goal=="muscle_gain":
-        print(True)
+    
         requirements["Calory_requirement_low"] = str(round(TDEE+TDEE*0.05,2))+"kcal"
         requirements["Calory_requirement_high"] = str(round(TDEE+TDEE*0.2,2))+"kcal"
-        requirements["protien_requirement_low"] = str(round(weight*1.6,2))+"g"
+        requirements["protien_requirement_loss"] = str(round(weight*1.6,2))+"g"
         requirements["protien_requirement_high"] = str(round(weight*2.2,2))+"g"
         requirements["carbohydrate_requirement_low"] = str(round(weight*3,2))+"g"
         requirements["carbohydrate_requirement_high"] = str(round(weight*6,2))+"g"
         requirements["fat_calory_requirements_low"] = str(round(weight*0.8,2))+"g"
         requirements["fat_calory_requirements_high"] = str(round(weight*1.2,2))+"g"
 
+
+    elif goal=="maintenance":
+        requirements["Calory_requirement_low"] = str(TDEE)+"kcal"
+        requirements["Calory_requirement_high"] = str(TDEE)+"kcal"
+        requirements["Protein_requirement_low"] = str(round(weight*1,2))+"g"
+        requirements["Protein_requirement_high"] = str(round(weight*1.2,2))+"g"
+        requirements["carbohydrate_requirement_low"] = str(round(weight*4,2))+"g"
+        requirements["carbohydrate_requirement_high"] = str(round(weight*5,2))+"g"
+        requirements["fat_calory_requirements_low"] = str(round(weight*0.8,2))+"g"
+        requirements["fat_calory_requirements_high"] = str(round(weight*1,2))+"g"
+
+    elif goal=="weight_loss":
+        requirements["Calory_requirement_low"] = str(round(TDEE-TDEE*0.2,2))+"kcal"
+        requirements["Calory_requirement_high"] = str(round(TDEE-TDEE*0.1,2))+"kcal"
+        requirements["Protein_requirement_low"] = str(round(weight*1.6,2))+"g"
+        requirements["Protein_requirement_high"] = str(round(weight*2.2,2))+"g"
+        requirements["carbohydrate_requirement_low"] = str(round(weight*2,2))+"g"
+        requirements["carbohydrate_requirement_high"] = str(round(weight*3,2))+"g"
+        requirements["fat_calory_requirements_low"] = str(round(weight*0.6,2))+"g"
+        requirements["fat_calory_requirements_high"] = str(round(weight*0.8,2))+"g"
     # Create a reference to store the daily requirements
     doc_ref_daily_requirements = user_db.collection("users").document(access_token).collection("personal data").document("Daily Requirements")
 
     doc_ref_daily_requirements.set(requirements)
 
+def get_requirements(access_token:str):
 
+    doc_ref_physical_measurements = user_db.collection("users").document(access_token).collection("personal data").document("Daily Requirements")
+    doc= doc_ref_physical_measurements.get()
 
     
+    
+    data = doc.to_dict()
+    print(data)
+    return data["Calory_requirement_low"]
+
+@router.post("/Meal_Prep_With_Five_Cards")
+def add_meal_plan_to_user(access_token:str, rice:str, rice_size:int, meat:str,meat_size:int, vegetable1: str,vegetable1_size:int, vegetable2: str, vegetable2_size:int, mallum:str,mallum_size:int, salad:str, salad_size:int):
+    add_food(access_token, rice, rice_size, "rice" )
+    add_food(access_token, meat, meat_size, "Meat or equivalents" )
+    add_food(access_token, vegetable1, vegetable1_size, "Vegetables")
+    add_food(access_token, vegetable2, vegetable2_size, "Vegetables")
+    add_food(access_token, mallum, mallum_size, "Mallum")
+    add_food(access_token, salad, salad_size, "Salads")
+
+    calory_requirement_low = get_requirements(access_token)
+    consumed_calorie_amount = get_calory_amount(access_token)
+
+    return{"Calory consumed: ":consumed_calorie_amount+"kcal", "Calory requirement: ":calory_requirement_low}
+
+
 
 
 
