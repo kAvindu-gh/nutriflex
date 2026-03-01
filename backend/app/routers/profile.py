@@ -1,6 +1,7 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from app.models.user import ProfileUpdate, FieldDelete, UserProfileResponse
 from app.services import profile_service
+from app.database.firebase import get_db 
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
@@ -151,3 +152,17 @@ async def upload_profile_picture(
     - Saved to Firebase Storage, URL stored in Firestore automatically
     """
     return await profile_service.upload_profile_picture(user_id, file)
+
+
+# ── Logout ────────────────────────────────────────────────────────────────────
+@router.post("/{user_id}/logout")
+def logout(user_id: str):
+    """
+    Logout endpoint. Verifies user exists and returns success.
+    Flutter clears local session after this call.
+    """
+    db = get_db()
+    doc = db.collection("users").document(user_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return {"message": "Logged out successfully", "user_id": user_id}
