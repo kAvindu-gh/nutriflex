@@ -8,7 +8,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // You can later connect these to real controllers / state management
   String fullName = "John Bonfield";
   String phone = "+94 76 807 6464";
   String? email;
@@ -18,7 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F13), // very dark background
+      backgroundColor: const Color(0xFF0F0F13), // Bg Color
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -66,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 24),
 
-            // ── Profile Picture ───────────────────────────────
+            // profile
             Center(
               child: Column(
                 children: [
@@ -91,7 +90,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             icon: const Icon(Icons.camera_alt, size: 18),
                             color: Colors.white,
                             onPressed: () {
-                              // TODO: pick image
                             },
                           ),
                         ),
@@ -109,38 +107,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 40),
 
-            // ── Full Name ─────────────────────────────────────
+            // Fname
             _buildFieldTile(
               icon: Icons.person_outline,
               title: "Full Name",
               value: fullName,
               onTap: () {
-                // TODO: open edit name bottom sheet / dialog
               },
             ),
 
-            // ── Mobile ────────────────────────────────────────
+            // Mobile
             _buildFieldTile(
               icon: Icons.phone_android_outlined,
               title: "Mobile",
               value: phone,
               onTap: () {
-                // TODO: edit phone
               },
             ),
 
-            // ── Email ─────────────────────────────────────────
+            // E-mail
             _buildFieldTile(
               icon: Icons.mail_outline,
               title: "E-mail",
               value: email ?? "Add your e-mail",
               valueColor: email == null ? Colors.grey : null,
               onTap: () {
-                // TODO: add/edit email
               },
             ),
 
-            // ── Birthday (stopping roughly here) ──────────────
+            // Birthday.
             _buildFieldTile(
               icon: Icons.cake_outlined,
               title: "Birthday",
@@ -149,11 +144,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   : "${birthday!.day}/${birthday!.month}/${birthday!.year}",
               valueColor: birthday == null ? Colors.grey : null,
               onTap: () async {
-                // TODO: show date picker
               },
             ),
-
-            // ── The rest (Gender, Logout, Bottom nav) would come next...
           ],
         ),
       ),
