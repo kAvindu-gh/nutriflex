@@ -37,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(width: 12),
             Text(
-              "Senuja Rasmina",
+              'Senuja Rasmina',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const SizedBox(height: 16),
             const Text(
-              "Your Information",
+              'Your Information',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -129,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildFieldTile(
               icon: Icons.mail_outline,
               title: "E-mail",
-              value: email ?? "Add your e-mail",
+              value: email ?? 'Add your e-mail',
               valueColor: email == null ? Colors.grey : null,
               onTap: () {
               },
@@ -138,9 +138,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Birthday.
             _buildFieldTile(
               icon: Icons.cake_outlined,
-              title: "Birthday",
+              title: 'Birthday',
               value: birthday == null
-                  ? "Add your birthday"
+                  ? 'Add your birthday'
                   : "${birthday!.day}/${birthday!.month}/${birthday!.year}",
               valueColor: birthday == null ? Colors.grey : null,
               onTap: () async {
