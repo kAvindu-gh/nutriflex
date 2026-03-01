@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Optional: make status bar look nicer on splash
+    // status bar look nicer on splash O
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
@@ -20,8 +20,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF0A1F1C), // very dark green/teal black
-        fontFamily: 'Roboto', // or your custom font
+        scaffoldBackgroundColor: const Color(0xFF0A1F1C), 
+        fontFamily: 'Roboto', 
       ),
     );
   }
@@ -38,13 +38,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // You can add navigation after 3–4 seconds here
-    // Example:
-    // Future.delayed(const Duration(seconds: 4), () {
-    //   Navigator.of(context).pushReplacement(
-    //     MaterialPageRoute(builder: (_) => const HomeScreen()),
-    //   );
-    // });
   }
 
   @override
@@ -59,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: const Color(0xFF1A3C36), // slightly lighter dark bg for logo
+                color: const Color(0xFF1A3C36), // dark
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -70,9 +63,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
               child: const Icon(
-                Icons.restaurant_menu, // You should replace with your real logo
+                Icons.restaurant_menu,
                 size: 70,
-                color: Color(0xFF39FF14), // bright neon green
+                color: Color(0xFF39FF14),
               ),
             ),
 
@@ -96,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen> {
               'Premium Smart Meal Prep',
               style: TextStyle(
                 fontSize: 20,
-                color: Color(0xFF90FFA6), // light mint-green
+                color: Color(0xFF90FFA6), 
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.8,
               ),
@@ -104,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
             const SizedBox(height: 60),
 
-            // Loading indicator
+            // Loading circle shower
             const SizedBox(
               width: 36,
               height: 36,
@@ -116,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
             const SizedBox(height: 100),
 
-            // Team / footer text (small & subtle)
+            // footer
             const Text(
               '~ Team Nutrition Navigators',
               style: TextStyle(
