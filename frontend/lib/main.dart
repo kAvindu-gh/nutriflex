@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'userProfile.dart'; // adjust path if your file is in a subfolder
+import 'userProfile.dart'; 
 
 void main() {
   runApp(const MyApp());

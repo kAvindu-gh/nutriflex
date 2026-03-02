@@ -29,7 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   String? _error;
 
-  // ── Animation controllers ──────────────────────────────────────────────────
+  // ── Animation controllers 
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late AnimationController _avatarController;
@@ -44,7 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late List<Animation<Offset>> _rowSlideAnims;
   late List<Animation<double>> _rowFadeAnims;
 
-  // ── Toast overlay ──────────────────────────────────────────────────────────
+  // ── Toast overlay 
   OverlayEntry? _toastEntry;
 
   @override
@@ -120,8 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
-  // ── Load profile ───────────────────────────────────────────────────────────
-  // !! DO NOT CHANGE — backend connected !!
+  // ── Load profile 
   Future<void> _loadProfile() async {
     setState(() { _isLoading = true; _error = null; });
     try {
@@ -141,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // !! DO NOT CHANGE — backend connected !!
+
   void _applyProfileData(Map<String, dynamic> data) {
     setState(() {
       fullName = data['fullName'] ?? '';
@@ -153,7 +152,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     });
   }
 
-  // !! DO NOT CHANGE — backend connected !!
   Future<void> _updateField(Map<String, dynamic> fields) async {
     if (_userId == null) return;
     try {
@@ -165,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // !! DO NOT CHANGE — backend connected !!
+
   Future<void> _deleteField(String field) async {
     if (_userId == null) return;
     try {
@@ -187,8 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // ── Floating toast ─────────────────────────────────────────────────────────
-  // !! DO NOT CHANGE !!
+  // ── Floating toast 
   void _showToast(String message, {required bool isSuccess}) {
     _toastEntry?.remove();
     _toastEntry = null;
@@ -208,8 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     overlay.insert(entry);
   }
 
-  // ── Image picker ───────────────────────────────────────────────────────────
-  // !! DO NOT CHANGE !!
+  // ── Image picker 
   Future<void> _onPickImage() async {
     if (profilePicUrl != null) {
       _showImageOptions();
@@ -285,7 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // !! DO NOT CHANGE !!
+
   void _confirmDelete({required String label, required VoidCallback onConfirm}) {
     showModalBottomSheet(
       context: context,
@@ -364,31 +360,42 @@ class _ProfileScreenState extends State<ProfileScreen>
     ));
 
     return Scaffold(
-      backgroundColor: kBg,
+      backgroundColor: const Color(0xFF000302),
       extendBodyBehindAppBar: true,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: kGreen))
-          : _error != null
-              ? _buildErrorState()
-              : FadeTransition(
-                  opacity: _fadeAnim,
-                  child: SlideTransition(
-                    position: _slideAnim,
-                    child: _buildBody(),
-                  ),
-                ),
+      body: Stack(
+        children: [
+          // ── Radial gradient background (103E23 → 000302 → 000503) 
+          Positioned.fill(
+            child: CustomPaint(painter: _RadialBgPainter()),
+          ),
+          // ── Main content 
+          _isLoading
+              ? const Center(child: CircularProgressIndicator(color: kGreen))
+              : _error != null
+                  ? _buildErrorState()
+                  : FadeTransition(
+                      opacity: _fadeAnim,
+                      child: SlideTransition(
+                        position: _slideAnim,
+                        child: _buildBody(),
+                      ),
+                    ),
+        ],
+      ),
     );
   }
 
   Widget _buildBody() {
     return CustomScrollView(
       slivers: [
-        // ── Transparent collapsing header ──────────────────────────────────
+        // ── Transparent collapsing header 
         SliverAppBar(
-          expandedHeight: 280,
+          expandedHeight: 240,
           pinned: true,
           stretch: true,
           backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           elevation: 0,
           automaticallyImplyLeading: false,
           flexibleSpace: FlexibleSpaceBar(
@@ -404,7 +411,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           leading: _buildBackButton(),
         ),
 
-        // ── Content ────────────────────────────────────────────────────────
+        // ── Content 
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,25 +437,24 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Transparent header background with profile pic ─────────────────────────
   Widget _buildHeaderBackground() {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Pure black — no green background
-        Container(color: kBg),
+        // Transparent — radial bg from Scaffold shows through
+        Container(color: Colors.transparent),
 
-        // Subtle radial glow behind avatar
+        // Subtle extra glow right behind avatar
         Positioned(
-          top: 60, left: 0, right: 0,
+          top: 40, left: 0, right: 0,
           child: Center(
             child: Container(
-              width: 220, height: 220,
+              width: 200, height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    kGreen.withOpacity(0.08),
+                    const Color(0xFF103E23).withOpacity(0.45),
                     Colors.transparent,
                   ],
                 ),
@@ -462,7 +468,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           bottom: 20, left: 0, right: 0,
           child: Column(
             children: [
-              // Animated avatar
               ScaleTransition(
                 scale: _avatarScaleAnim,
                 child: FadeTransition(
@@ -500,7 +505,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                               : const Icon(Icons.person,
                                   color: Colors.white38, size: 50),
                         ),
-                        // Camera badge
                         Positioned(
                           bottom: 4, right: 4,
                           child: Container(
@@ -508,7 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             decoration: BoxDecoration(
                               color: kGreen,
                               shape: BoxShape.circle,
-                              border: Border.all(color: kBg, width: 2),
+                              border: Border.all(color: Colors.transparent, width: 2),
                             ),
                             child: const Icon(Icons.camera_alt,
                                 color: Colors.white, size: 13),
@@ -519,10 +523,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
               ),
-
               const SizedBox(height: 14),
-
-              // Name with fade in
               FadeTransition(
                 opacity: _avatarFadeAnim,
                 child: Text(
@@ -535,16 +536,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
               ),
-
               const SizedBox(height: 4),
-
-              // Email subtitle
               FadeTransition(
                 opacity: _avatarFadeAnim,
                 child: Text(
                   email ?? '',
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: Colors.grey.shade500,
                     fontSize: 13,
                   ),
                 ),
@@ -558,14 +556,17 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // Frosted glass title shown when header is collapsed
   Widget _buildCollapsedTitle() {
-    return const SizedBox.shrink(); // empty — no title
+    return const SizedBox.shrink(); 
   }
 
   Widget _buildBackButton() {
     return Padding(
-      padding: const EdgeInsets.only(left: 16),
+      padding: const EdgeInsets.only(left: 25, top: 10),
       child: GestureDetector(
-        onTap: () => Navigator.maybePop(context),
+        onTap: () {
+          // Navigates back to previous page (notifications or wherever this was pushed from)
+          Navigator.maybePop(context);
+        },
         child: Container(
           width: 40, height: 40,
           decoration: BoxDecoration(
@@ -587,7 +588,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Section label ──────────────────────────────────────────────────────────
+  // ── Section label 
   Widget _buildSectionLabel(String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -644,9 +645,21 @@ class _ProfileScreenState extends State<ProfileScreen>
         onTap: () => _showEditSheet(
           fieldLabel: "Mobile",
           currentValue: mobile,
+          hintText: "e.g. 072 222 2222",
           keyboardType: TextInputType.phone,
           canDelete: mobile.isNotEmpty,
-          onSave: (val) => _updateField({'mobile': val}),
+          onSave: (val) {
+            // Clean input — remove spaces and dashes
+            final cleaned = val.replaceAll(RegExp(r'[\s\-()]'), '');
+            // Auto-add +94 if user typed local format like 07x
+            String formatted = cleaned;
+            if (cleaned.startsWith('0') && cleaned.length == 10) {
+              formatted = '+94${cleaned.substring(1)}';
+            } else if (!cleaned.startsWith('+')) {
+              formatted = '+$cleaned';
+            }
+            _updateField({'mobile': formatted});
+          },
           onDelete: () => _confirmDelete(
             label: "mobile number",
             onConfirm: () => _deleteField('mobile'),
@@ -703,18 +716,27 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     ];
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0E0E0E),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF103E23).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: kGreen.withOpacity(0.35),
+              width: 1,
+            ),
+          ),
+          child: Column(children: rows),
+        ),
       ),
-      child: Column(children: rows),
     );
   }
 
-  // ── Single animated row ────────────────────────────────────────────────────
+  // ── Single animated row 
   Widget _buildRow({
     required int index,
     required IconData icon,
@@ -801,7 +823,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Logout button ──────────────────────────────────────────────────────────
+  // ── Logout button 
   Widget _buildLogoutButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -829,12 +851,11 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Edit bottom sheet ──────────────────────────────────────────────────────
-  // !! DO NOT CHANGE — backend connected !!
   void _showEditSheet({
     required String fieldLabel,
     required String currentValue,
     TextInputType keyboardType = TextInputType.text,
+    String? hintText,
     required bool canDelete,
     required void Function(String) onSave,
     VoidCallback? onDelete,
@@ -897,7 +918,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
-                  hintText: "Enter $fieldLabel",
+                  hintText: hintText ?? "Enter $fieldLabel",
                   hintStyle: TextStyle(color: Colors.grey.shade700),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -946,8 +967,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Birthday picker ────────────────────────────────────────────────────────
-  // !! DO NOT CHANGE — backend connected !!
+  // ── Birthday picker
   Future<void> _onPickBirthday() async {
     if (birthday != null) {
       showModalBottomSheet(
@@ -1028,8 +1048,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // ── Gender picker ──────────────────────────────────────────────────────────
-  // !! DO NOT CHANGE — backend connected !!
+  // ── Gender picker
   void _onSelectGender() {
     final options = ["male", "female"];
     showModalBottomSheet(
@@ -1105,8 +1124,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Logout ─────────────────────────────────────────────────────────────────
-  // !! DO NOT CHANGE — backend connected !!
+  // ── Logout
   void _onLogout() {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
@@ -1192,7 +1210,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Reusable sheet handle ──────────────────────────────────────────────────
+  // ── Reusable sheet handle
   Widget _sheetHandle() {
     return Center(
       child: Container(
@@ -1206,7 +1224,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Error state ────────────────────────────────────────────────────────────
+  // ── Error state
   Widget _buildErrorState() {
     return Center(
       child: Padding(
@@ -1245,8 +1263,34 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 }
 
-// ── Animated floating toast ────────────────────────────────────────────────────
-// !! DO NOT CHANGE !!
+// ── Radial gradient background painter
+class _RadialBgPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Main radial gradient — centered slightly above middle (where avatar is)
+    final center = Offset(size.width / 2, size.height * 0.28);
+    final radius = size.width * 1.1;
+
+    final paint = Paint()
+      ..shader = RadialGradient(
+        center: Alignment.center,
+        radius: 1.0,
+        colors: const [
+          Color(0xFF103E23), // 0% — dark green center
+          Color(0xFF000302), // 99% — near black
+          Color(0xFF000503), // 100% — deep black
+        ],
+        stops: const [0.0, 0.72, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+
+    canvas.drawRect(Offset.zero & size, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── Animated floating toast
 class _ToastWidget extends StatefulWidget {
   final String message;
   final bool isSuccess;
@@ -1297,8 +1341,8 @@ class _ToastWidgetState extends State<_ToastWidget>
   Widget build(BuildContext context) {
     return Positioned(
       top: MediaQuery.of(context).padding.top + 16,
-      left: 24,
-      right: 24,
+      left: 80,   // pushed right so it clears the back button
+      right: 60,  // narrower width
       child: SlideTransition(
         position: _slide,
         child: FadeTransition(
