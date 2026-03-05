@@ -21,3 +21,5 @@ void main() {
 
   runApp(const NutriFlexApp());
 }
+
+class NutriFlexApp extends StatelessWidget {}
