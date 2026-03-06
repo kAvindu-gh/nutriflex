@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_page.dart';
-
+import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,70 +20,66 @@ class _LoginPageState extends State<LoginPage> {
   final Color fieldFill = Colors.white.withOpacity(0.1);
 
   Future<void> _resetPassword() async {
-  if (_emailController.text.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Enter your email first')),
-    );
-    return;
-  }
-
-  await FirebaseAuth.instance.sendPasswordResetEmail(
-    email: _emailController.text.trim(),
-  );
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Password reset email sent')),
-  );
-}
-
-
-  Future<void> _loginUser() async {
-  try {
-    final userCredential =
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-
-    final user = userCredential.user;
-
-    if (user == null) return;
-
-    // 🔄 Refresh user state
-    await user.reload();
-    final refreshedUser = FirebaseAuth.instance.currentUser;
-
-    if (!refreshedUser!.emailVerified) {
-      await FirebaseAuth.instance.signOut();
-
+    if (_emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please verify your email before logging in'),
-        ),
+        const SnackBar(content: Text('Enter your email first')),
       );
       return;
     }
 
-    // ✅ Email verified → Go to Home
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomePage()),
+    await FirebaseAuth.instance.sendPasswordResetEmail(
+      email: _emailController.text.trim(),
     );
-  } on FirebaseAuthException catch (e) {
-    String message = 'Login failed';
-
-    if (e.code == 'user-not-found') {
-      message = 'No account found with this email';
-    } else if (e.code == 'wrong-password') {
-      message = 'Incorrect password';
-    }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      const SnackBar(content: Text('Password reset email sent')),
     );
   }
-}
 
+  Future<void> _loginUser() async {
+    try {
+      final userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      final user = userCredential.user;
+
+      if (user == null) return;
+
+      await user.reload();
+      final refreshedUser = FirebaseAuth.instance.currentUser;
+
+      if (!refreshedUser!.emailVerified) {
+        await FirebaseAuth.instance.signOut();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please verify your email before logging in'),
+          ),
+        );
+        return;
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = 'Login failed';
+
+      if (e.code == 'user-not-found') {
+        message = 'No account found with this email';
+      } else if (e.code == 'wrong-password') {
+        message = 'Incorrect password';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -132,7 +128,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
 
                 const SizedBox(height: 30),
-                // ✅ Sign In Button
+
+                // 🔹 SIGN IN BUTTON
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -154,22 +151,51 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 10),
 
-                // ✅ Forgot Password Button
+                // 🔹 FORGOT PASSWORD
                 TextButton(
                   onPressed: _resetPassword,
                   child: Text(
-                    "Forgot Password ?",
+                    "Forgot Password?",
                     style: TextStyle(color: primaryGreen),
                   ),
                 ),
 
-                ],
-              ),
+                const SizedBox(height: 10),
+
+                // 🔹 SIGN UP NAVIGATION
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SignUpPage(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "Sign Up",
+                        style: TextStyle(
+                          color: primaryGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
   Widget _buildTextField({
     required TextEditingController controller,
