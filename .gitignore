@@ -25,3 +25,4 @@ logs/
 # Temp
 temp/
 tmp/
+backend/user_firebase-key.json

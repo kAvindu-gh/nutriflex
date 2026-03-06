@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '.bmi_screen.dart';
+import 'bmi_screen.dart';
 
 void main() => runApp(const NutriFlexApp());
 
@@ -33,7 +33,7 @@ class _MainShellState extends State<MainShell> {
   final List<Widget> _screens = [
     const _PlaceholderScreen('Home'),
     const _PlaceholderScreen('Meal Prep'),
-    const BMIScreen(),                    // ← your BMI screen
+    const BMIScreen(),                   
     const _PlaceholderScreen('Alerts'),
   ];
 
