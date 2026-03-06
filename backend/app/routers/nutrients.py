@@ -22,7 +22,7 @@ usda_service = USDAService()
 db = usda_service.db
 
 # Initialize the user Firebase
-user_firebase_key_path = os.getenv("USER_FIREBASE_KEY_PATH", "app/user_firebase-key.json")
+user_firebase_key_path = os.getenv("USER_FIREBASE_KEY_PATH", "user_firebase-key.json")
 user_cred = credentials.Certificate(user_firebase_key_path)
 user_app = firebase_admin.initialize_app(user_cred, name="user_app")
 user_db = firestore.client(user_app)

@@ -10,7 +10,7 @@ const kGreen   = Color(0xFF14D97D);
 const kBg      = Color(0xFF000302);
 const kCard    = Color(0xFF0D1610);
 const kField   = Color(0xFF111A13);
-const kBaseUrl = 'http://10.31.27.66:8000';
+const kBaseUrl = 'http://192.168.1.6:8000';
 
 // ─────────────────────────────────────────
 // MODEL

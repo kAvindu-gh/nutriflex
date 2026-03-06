@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "nutriflex-78e2a",
+  "private_key_id": "b836beee562fbbf23ae32dab9dd7e5852145dda8",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDCGy5jZnW2Zzxw\n/sCl2ybTjjNSqMSNbvNwi/1nuA6SMPc4REL7MBjHN24RdGsFF+tR+vzJT22H+O2m\nAoV+ggJ47Y//w2JWB1u235k2mKODQq2b/OBGLbmz+ZW59jLcT1+6zABwjzuHsNps\nXpIs/BBXIBQHPoAAIMs4XqgtnXHDzPSvTApti/Vt6wsgpKdQrheH0P8YFYuKiqzW\ndxhxS3chqVVnIxwMSrt2LlzA4nB3ZZ1iGn7scmeR0JuMokpf78kLLm5y4GxO4I5a\nT/l/XfmxipUWBA4t5auBYeHCjzexX6UAn/8HfPsoyIakrBonkZnjyiI1ZLLgQ63T\nqSsrmLz5AgMBAAECggEAEaWTTeclQYGDjbROGGYNqBhv/bj+hus03PZlLIuftivB\ny2RCq1Uqk4YBuZAvdfBAQnJCjsdr/6YibkAhbyhrssnKQyg6EEnX9+QT06evNJeY\ncquGn5Vi94Pz2EsT7FKXs0L+W+gHCKWL82PqVIZQB/5lw74rY0JCp4EiN2TD0IHw\nnP0M2Cw1qKVSbCupnBdA4uBnj+cIYsubvMsFITPYLR35ojf+HqGHlpaGUYQEGrqi\nTmqJD1S0MXdqpIDCEyHenGsloFGfmpX4gnm8M+wuKQcIb+GPvOpWbl4BckwbbudK\nTr5JU/rEEAiSn0mdtFDnxWPwuRA9RyIOuBYKrDwk9wKBgQD9sl7fNibr/ST01AGg\nfXsQswReU2nCyamsbyDHb9rYXkwJp2SENdzeZCYfAmrF/fqxGQyyo44meibbKwWX\ngnmVW5TlUQ+SLb4EUIKn2rdo7K2gNwESRa+f9GyeAf+tiK37qV8SovMZCdiMe4/+\n1H2oL8DQuk4N1STaF80Dq1gc7wKBgQDD3lApvSHF99/xU8XROIxY6aPIuIdsICgj\nT5DW+qcBnaQHbnfrrHsEIPybx/LYTwkaByaGrZJYYxtp+sp/UxsNioBrg/f4D40m\nDuPiApZHGgOOWaip8zFh+b5/dIBBWirLtIlTW2d8q/81jZcl54ADyy3QMCZZOH4g\nGaMMV3MUlwKBgEGSV9kjmv3F6UZqgZ0ksalIS+nBb4WMMBHEi1lg/NSN0uNv45gU\nf+jvQ7ciHczc723UxqZphbVGP0LIpOJbM+e5ywtWX0ruDb35vTt7WYqCGgJeFSXO\n4yzZtTVF2PrWZ/my9kLP4TtogxMUYMyByZSt+w04CjKjE6pXGoNHRzf7AoGADIgP\ntuvr2j+mq0kB0gX9LL8eBHyR5YAVMVUo3ihBQSA122fc8k4hvLzjjI/5YI+F9I1a\nkKlQQKlumpQ6GnVVuMMQvlA+MDfGfxXazJ3/wWLPsW7ZFK6DjVIuNvdcMVI0hL3z\nP0sMzvQuKt35OqqaDSQVtUkvWuv7XdBmFycNLNcCgYEAzavFXLAg+wrolWSFTyIj\n+lXsKPesAHvvD4N3RakpwZ7Ngr1TR9EgOweuaCeO0rDcsszc8lown5/JKtkiqycp\nW7WAQa7I2kwVvNc2Dj2DoJ4DxP9+uSqqlWRZCmMvgNtBBwK9efjrMFRWZVwEO+H5\n41kogqAYM2ISs3+8/xPTWhc=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@nutriflex-78e2a.iam.gserviceaccount.com",
+  "client_id": "117022284988059988715",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40nutriflex-78e2a.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
