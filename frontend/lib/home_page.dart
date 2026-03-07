@@ -1,24 +1,6 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black,
-        primaryColor: Colors.green,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,6 +10,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  final Color primaryGreen = const Color(0xFF1ED760);
+  final Color cardColor = const Color(0xFF121212);
+
   int mealsThisWeek = 12;
   int _selectedIndex = 0;
 
@@ -75,55 +61,72 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+
     final filteredRecipes = recipes
         .where((recipe) =>
-            recipe['title']!
-                .toLowerCase()
-                .contains(searchQuery.toLowerCase()))
+        recipe['title']!.toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
 
     return Scaffold(
+      backgroundColor: Colors.black,
+
       bottomNavigationBar: _buildBottomNav(),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+
             children: [
+
               _buildHeader(),
+
               const SizedBox(height: 20),
+
               _buildSearchBar(),
+
               const SizedBox(height: 20),
+
               _buildStats(),
+
               const SizedBox(height: 30),
+
               _buildTrendingHeader(),
+
               const SizedBox(height: 16),
 
-              // 🔍 SEARCH RESULT HANDLING
               if (filteredRecipes.isEmpty && searchQuery.isNotEmpty)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.only(top: 40),
                     child: Text(
                       'Searched Recipe Not Found',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(color: Colors.grey),
                     ),
                   ),
                 )
               else
                 ...filteredRecipes.map((recipe) => _recipeCard(
-                      image: recipe['image']!,
-                      title: recipe['title']!,
-                      calories: recipe['calories']!,
-                      protein: recipe['protein']!,
-                      tag: recipe['tag']!,
-                    )),
+                  image: recipe['image']!,
+                  title: recipe['title']!,
+                  calories: recipe['calories']!,
+                  protein: recipe['protein']!,
+                  tag: recipe['tag']!,
+                )),
+
             ],
           ),
         ),
@@ -131,60 +134,85 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 🔹 HEADER
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
       children: [
+
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
-            Text('NutriFlex',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            Text(
+              'NutriFlex',
+              style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+
             SizedBox(height: 4),
-            Text('Discover premium meals',
-                style: TextStyle(color: Colors.grey)),
+
+            Text(
+              'Discover premium meals',
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
-        IconButton(
-          icon: const Icon(Icons.shopping_cart, color: Colors.green),
-          onPressed: () {
-            debugPrint('Cart clicked');
-          },
-        ),
+
+        Row(
+          children: [
+
+            IconButton(
+              icon: Icon(Icons.shopping_cart, color: primaryGreen),
+              onPressed: () {},
+            ),
+
+            IconButton(
+              icon: Icon(Icons.logout, color: primaryGreen),
+              onPressed: _logout,
+            ),
+          ],
+        )
       ],
     );
   }
 
-  // 🔹 SEARCH BAR
   Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
+
       decoration: BoxDecoration(
-        color: Colors.grey.shade900,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
+
       child: TextField(
         controller: _searchController,
+
         onChanged: (value) {
           setState(() {
             searchQuery = value;
           });
         },
-        decoration: const InputDecoration(
-          icon: Icon(Icons.search, color: Colors.green),
+
+        style: const TextStyle(color: Colors.white),
+
+        decoration: InputDecoration(
+          icon: Icon(Icons.search, color: primaryGreen),
           hintText: 'Search recipes...',
+          hintStyle: const TextStyle(color: Colors.grey),
           border: InputBorder.none,
         ),
       ),
     );
   }
 
-  // 🔹 STATS
   Widget _buildStats() {
     return Row(
       children: [
-        _statCard('2,400', 'Daily Calories'),
+        _statCard('2,400', 'Daily calories'),
         const SizedBox(width: 16),
         _statCard(mealsThisWeek.toString(), 'Meals This Week'),
       ],
@@ -195,46 +223,60 @@ class _HomePageState extends State<HomePage> {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
+
         decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.15),
+          color: primaryGreen.withOpacity(0.15),
           borderRadius: BorderRadius.circular(18),
         ),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
-            Text(value,
-                style:
-                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(color: Colors.grey)),
+
+            Text(
+              value,
+              style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+
+            Text(
+              label,
+              style: const TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // 🔹 TRENDING HEADER (NOW CLICKABLE ✅)
   Widget _buildTrendingHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
       children: [
+
         const Text(
           'Trending Recipes',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white),
         ),
+
         InkWell(
-          onTap: () {
-            debugPrint('See all clicked');
-          },
-          child: const Text(
+          onTap: () {},
+          child: Text(
             'See all',
-            style: TextStyle(color: Colors.green),
+            style: TextStyle(color: primaryGreen),
           ),
         ),
       ],
     );
   }
 
-  // 🔹 RECIPE CARD
   Widget _recipeCard({
     required String image,
     required String title,
@@ -242,15 +284,19 @@ class _HomePageState extends State<HomePage> {
     required String protein,
     required String tag,
   }) {
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
+
       decoration: BoxDecoration(
-        color: Colors.grey.shade900,
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
       ),
+
       child: Row(
         children: [
+
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Image.asset(
@@ -260,32 +306,54 @@ class _HomePageState extends State<HomePage> {
               fit: BoxFit.cover,
             ),
           ),
+
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+
               children: [
-                Text(title,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text('$calories Calories • $protein Protein',
-                    style: const TextStyle(color: Colors.grey)),
+
+                Text(
+                  title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  '$calories Calories • $protein Protein',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+
                 const SizedBox(height: 6),
+
+                /// Modified Chip
                 Chip(
                   label: Text(tag),
-                  backgroundColor: Colors.green.withOpacity(0.2),
-                  labelStyle: const TextStyle(color: Colors.green),
+                  backgroundColor: const Color(0xFF064E3B), // dark green
+                  labelStyle: const TextStyle(
+                    color: Color(0xFF34F5A3), // light green
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
           ),
+
           Row(
             children: [
+
               IconButton(
-                icon: const Icon(Icons.remove_circle, color: Colors.green),
+                icon: Icon(Icons.remove_circle, color: primaryGreen),
                 onPressed: _decreaseMeals,
               ),
+
               IconButton(
-                icon: const Icon(Icons.add_circle, color: Colors.green),
+                icon: Icon(Icons.add_circle, color: primaryGreen),
                 onPressed: _increaseMeals,
               ),
             ],
@@ -295,28 +363,45 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 🔹 BOTTOM NAV
   Widget _buildBottomNav() {
     return BottomNavigationBar(
       currentIndex: _selectedIndex,
-      onTap: (i) => setState(() => _selectedIndex = i),
+
+      onTap: (i) {
+        setState(() {
+          _selectedIndex = i;
+        });
+      },
+
       backgroundColor: Colors.black,
+
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.green,
+
+      selectedItemColor: primaryGreen,
       unselectedItemColor: Colors.grey,
+
       items: const [
+
         BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home'),
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
+          label: 'Home',
+        ),
+
         BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu), label: 'Meal Prep'),
+          icon: Icon(Icons.restaurant_menu),
+          label: 'Meal Prep',
+        ),
+
         BottomNavigationBarItem(
-            icon: Icon(Icons.calculate_outlined), label: 'BMI'),
+          icon: Icon(Icons.calculate),
+          label: 'BMI',
+        ),
+
         BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none),
-            activeIcon: Icon(Icons.notifications),
-            label: 'Alerts'),
+          icon: Icon(Icons.notifications),
+          label: 'Alerts',
+        ),
       ],
     );
   }
