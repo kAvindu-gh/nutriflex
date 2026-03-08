@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'screens/home_page.dart';
 import 'widgets/bottom_nav.dart';
 
 // ── Placeholder screens for tabs not yet built ───────────────────────────────
@@ -54,7 +55,7 @@ class _MainShellState extends State<MainShell> {
   // IndexedStack keeps every screen alive — scroll positions,
   // trending recipes etc. are all preserved when switching tabs
   final List<Widget> _screens = const [
-    _PlaceholderScreen(name: 'Home',      icon: Icons.home_outlined),
+    HomePage(),
     _PlaceholderScreen(name: 'Meal Prep', icon: Icons.restaurant_menu),
     _PlaceholderScreen(name: 'BMI',       icon: Icons.calculate_outlined),
     _PlaceholderScreen(name: 'Alerts',    icon: Icons.notifications_none),

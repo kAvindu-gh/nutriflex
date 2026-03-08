@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'services/calorie_provider_service.dart';
 import 'main_shell.dart';
 
 void main() {
@@ -16,6 +18,12 @@ void main() {
   ));
 
   runApp(const NutriFlexApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CalorieProvider(),
+      child: const NutriFlexApp(),
+    ),
+  );
 }
 
 class NutriFlexApp extends StatelessWidget {
