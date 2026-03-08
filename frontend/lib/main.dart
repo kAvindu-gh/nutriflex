@@ -17,7 +17,6 @@ void main() {
     statusBarIconBrightness: Brightness.light,
   ));
 
-  runApp(const NutriFlexApp());
   runApp(
     ChangeNotifierProvider(
       create: (_) => CalorieProvider(),

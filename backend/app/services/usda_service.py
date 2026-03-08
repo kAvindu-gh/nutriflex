@@ -19,13 +19,11 @@ class USDAService:
         
         # Initialize Firebase
         try:
-            # Initialize Firebase if not already initialized
             try:
                 firebase_admin.get_app()
                 self.db = firestore.client()
                 print("Firebase already initialized ! ")
             except ValueError:
-                # Path to your Firebase service account key
                 cred_path = os.getenv("FIREBASE_KEY_PATH")  
                 
                 if os.path.exists(cred_path):
@@ -85,7 +83,6 @@ class USDAService:
             amount = nutrient.get("amount", 0)
             unit_name = nutrient_info.get("unitName", "")
             
-            # Create a nested structure for nutrient values
             nutrients_dict[nutrient_name] = {
                 "value": amount,
                 "unit": unit_name
@@ -128,41 +125,53 @@ class USDAService:
             # Prepare the food document
             food_doc = self.prepare_food_for_firebase(food_data)
             
-            # Use FDC ID as document ID for easy lookup
-            doc_id = str(food_data.get("fdcId", ""))
-            if not doc_id:
-                return {"error": "No FDC ID found", "saved": False}
+            if not food_doc:
+                return {"error": "Could not prepare food data", "saved": False}
             
-            # Save to Firebase
+            # Get FDC ID for document ID
+            fdc_id = food_data.get("fdcId")
+            if not fdc_id:
+                # Use name as fallback document ID
+                doc_id = food_doc["name"].lower().replace(" ", "_").replace(",", "")
+            else:
+                doc_id = str(fdc_id)
+            
+            # Save to 'foods' collection
             doc_ref = self.db.collection("foods").document(doc_id)
             doc_ref.set(food_doc)
             
+            print(f"Saved food to Firebase: {food_doc['name']} (ID: {doc_id})")
+            
             return {
+                "success": True,
                 "saved": True,
-                "firebase_id": doc_id,
-                "name": food_doc.get("name")
+                "document_id": doc_id,
+                "name": food_doc["name"],
+                "fdc_id": food_doc.get("fdc_id", ""),
+                "nutrients_count": len(food_doc.get("nutrients", {}))
             }
-                
+            
         except Exception as e:
+            print(f"Error saving to Firebase: {e}")
             return {"error": str(e), "saved": False}
-    
+
     # Search by name and save to Firebase.
     def search_and_save_by_name(self, query: str) -> Dict[str, Any]:
         try:
-            # Search for food
+            # Search for foods
             foods = self.search_foods_by_name(query, page_size=1)
             
             if not foods:
-                return {"error": f"No food found for: {query}", "saved": False}
+                return {"error": f"No foods found for query: {query}", "saved": False}
             
-            # Get first result
-            food = foods[0]
-            fdc_id = food.get("fdcId")
+            # Get the first food's details
+            first_food = foods[0]
+            fdc_id = first_food.get("fdcId")
             
             if not fdc_id:
-                return {"error": "No FDC ID found", "saved": False}
+                return {"error": "No FDC ID found in search results", "saved": False}
             
-            # Get full details
+            # Get full food details
             full_food_data = self.get_food_by_fdc_id(fdc_id)
             
             if not full_food_data:
