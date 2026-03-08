@@ -313,7 +313,7 @@ class RecipeService:
         try:
             # Get from Firebase 'recipes' collection ordered by search_count
             recipes_ref = self.db.collection("recipes")
-            query = recipes_ref.order_by("search_count", direction=firestore.Query.DESCENDING).limit(20)
+            query = recipes_ref.order_by("search_count", direction=firestore.Query.DESCENDING).limit(100)
             docs = query.stream()
             
             trending = []
@@ -360,6 +360,13 @@ class RecipeService:
                     "last_updated": now,
                     "cache_status": "fresh"
                 }
+            
+            # Firebase returned no documents yet
+            return {
+                "recipes": [],
+                "last_updated": now,
+                "cache_status": "empty"
+            }
                 
         except Exception as e:
             print(f"Error getting trending: {e}")
@@ -369,6 +376,12 @@ class RecipeService:
                     "last_updated": self.trending_cache["last_updated"],
                     "cache_status": "cached (error)"
                 }
+            # Last resort fallback
+            return {
+                "recipes": [],
+                "last_updated": now,
+                "cache_status": "error"
+            }
           
 # Global instance
 recipe_service = RecipeService()

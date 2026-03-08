@@ -16,8 +16,7 @@ async def search_recipe(
 # Get trending recipes based on search count
 @router.get("/trending")
 async def get_trending_recipes(
-    limit: int = Query(8, ge=1, le=20, description="Number of trending recipes")
+    limit: int = Query(50, ge=1, le=100, description="Number of trending recipes")
 ):
     result = recipe_service.get_trending_recipes(limit)
     return result
-
