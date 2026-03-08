@@ -1,26 +1,47 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
-// import 'signup_page.dart'; // uncomment if signup exists
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'services/calorie_provider_service.dart';
+import 'main_shell.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarContrastEnforced: false,
+    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+  ));
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CalorieProvider(),
+      child: const NutriFlexApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class NutriFlexApp extends StatelessWidget {
+  const NutriFlexApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Nutriflex',
+      title: 'NutriFlex',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        scaffoldBackgroundColor: const Color(0xFF000302),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green,
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
-      home: const HomePage(),
-      // OR if signup should come first:
-      // home: const SignUpPage(),
+      home: const MainShell(),
     );
   }
 }
