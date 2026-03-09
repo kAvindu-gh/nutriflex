@@ -11,15 +11,18 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   final bool _obscurePassword = true;
 
   final Color primaryGreen = const Color(0xFF1ED760);
-  final Color fieldFill = Colors.white.withOpacity(0.1);
+  final Color fieldFill = const Color(0x1AFFFFFF);
 
   Future<void> _resetPassword() async {
+
     if (_emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter your email first')),
@@ -37,7 +40,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _loginUser() async {
+
     try {
+
       final userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -52,6 +57,7 @@ class _LoginPageState extends State<LoginPage> {
       final refreshedUser = FirebaseAuth.instance.currentUser;
 
       if (!refreshedUser!.emailVerified) {
+
         await FirebaseAuth.instance.signOut();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
             content: Text('Please verify your email before logging in'),
           ),
         );
+
         return;
       }
 
@@ -66,12 +73,16 @@ class _LoginPageState extends State<LoginPage> {
         context,
         MaterialPageRoute(builder: (_) => const HomePage()),
       );
+
     } on FirebaseAuthException catch (e) {
+
       String message = 'Login failed';
 
       if (e.code == 'user-not-found') {
         message = 'No account found with this email';
-      } else if (e.code == 'wrong-password') {
+      }
+
+      if (e.code == 'wrong-password') {
         message = 'Incorrect password';
       }
 
@@ -83,30 +94,40 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+
     _emailController.dispose();
     _passwordController.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.black,
+
       body: SafeArea(
         child: SingleChildScrollView(
+
           padding: const EdgeInsets.symmetric(horizontal: 30),
+
           child: Form(
             key: _formKey,
+
             child: Column(
               children: [
+
                 const SizedBox(height: 60),
 
                 Container(
                   padding: const EdgeInsets.all(16),
+
                   decoration: BoxDecoration(
                     color: primaryGreen,
                     borderRadius: BorderRadius.circular(20),
                   ),
+
                   child: const Icon(Icons.restaurant, size: 40),
                 ),
 
@@ -129,31 +150,36 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 30),
 
-                // 🔹 SIGN IN BUTTON
                 SizedBox(
                   width: double.infinity,
                   height: 56,
+
                   child: ElevatedButton(
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryGreen,
+
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
+
                     onPressed: () {
+
                       if (_formKey.currentState!.validate()) {
                         _loginUser();
                       }
                     },
+
                     child: const Text("Sign in"),
                   ),
                 ),
 
                 const SizedBox(height: 10),
 
-                // 🔹 FORGOT PASSWORD
                 TextButton(
                   onPressed: _resetPassword,
+
                   child: Text(
                     "Forgot Password?",
                     style: TextStyle(color: primaryGreen),
@@ -162,16 +188,19 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 10),
 
-                // 🔹 SIGN UP NAVIGATION
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+
                   children: [
+
                     const Text(
                       "Don't have an account?",
                       style: TextStyle(color: Colors.white70),
                     ),
+
                     TextButton(
                       onPressed: () {
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -179,8 +208,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         );
                       },
+
                       child: Text(
                         "Sign Up",
+
                         style: TextStyle(
                           color: primaryGreen,
                           fontWeight: FontWeight.bold,
@@ -198,26 +229,46 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildTextField({
+
     required TextEditingController controller,
     required String hint,
     required IconData icon,
     bool isPassword = false,
   }) {
+
     return TextFormField(
+
       controller: controller,
       obscureText: isPassword && _obscurePassword,
+
       style: const TextStyle(color: Colors.white),
+
       validator: (value) {
-        if (value == null || value.isEmpty) return '$hint is required';
-        if (hint == "Email" && !value.contains('@')) return 'Invalid email';
-        if (hint == "Password" && value.length < 6) return 'Min 6 characters';
+
+        if (value == null || value.isEmpty) {
+          return '$hint is required';
+        }
+
+        if (hint == "Email" && !value.contains('@')) {
+          return 'Invalid email';
+        }
+
+        if (hint == "Password" && value.length < 6) {
+          return 'Min 6 characters';
+        }
+
         return null;
       },
+
       decoration: InputDecoration(
+
         hintText: hint,
+
         prefixIcon: Icon(icon, color: primaryGreen),
+
         filled: true,
         fillColor: fieldFill,
+
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
