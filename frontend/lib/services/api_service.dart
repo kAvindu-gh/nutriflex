@@ -1,7 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// ─── Data Models ────────────────────────────────────────────────────────────
+// ─── Base URL — change ONLY this one line when your IP changes ───────────────
+// Physical device : your machine's IPv4 (e.g. 192.168.8.132)
+// Emulator        : 10.0.2.2
+const String kBaseUrl = 'http://192.168.8.132:8000';
+
+// ─── Data Models ─────────────────────────────────────────────────────────────
 
 class TrendingRecipe {
   final String id;
@@ -26,13 +31,13 @@ class TrendingRecipe {
 
   factory TrendingRecipe.fromJson(Map<String, dynamic> json) {
     return TrendingRecipe(
-      id: json['id'] ?? '',
-      name: json['name'] ?? 'Unknown',
-      calories: (json['calories'] ?? 0).toDouble(),
-      proteinG: (json['protein_g'] ?? 0).toDouble(),
-      fatG: (json['fat_g'] ?? 0).toDouble(),
-      carbsG: (json['carbs_g'] ?? 0).toDouble(),
-      imageUrl: json['image_url'],
+      id:          json['id']           ?? '',
+      name:        json['name']         ?? 'Unknown',
+      calories:   (json['calories']     ?? 0).toDouble(),
+      proteinG:   (json['protein_g']    ?? 0).toDouble(),
+      fatG:       (json['fat_g']        ?? 0).toDouble(),
+      carbsG:     (json['carbs_g']      ?? 0).toDouble(),
+      imageUrl:    json['image_url'],
       searchCount: json['search_count'] ?? 0,
     );
   }
@@ -55,81 +60,90 @@ class SearchedRecipe {
 
   factory SearchedRecipe.fromJson(Map<String, dynamic> json) {
     return SearchedRecipe(
-      name: json['name'] ?? '',
-      ingredients: List<String>.from(json['ingredients'] ?? []),
-      instructions: List<String>.from(json['instructions'] ?? []),
-      nutrition: json['nutrition'] ?? {},
-      savedToFirebase: json['saved_to_firebase'] ?? false,
+      name:            json['name']               ?? '',
+      ingredients:     List<String>.from(json['ingredients']  ?? []),
+      instructions:    List<String>.from(json['instructions'] ?? []),
+      nutrition:       json['nutrition']           ?? {},
+      savedToFirebase: json['saved_to_firebase']   ?? false,
     );
   }
 
-  // Extracts calories string from USDA nutrition data
   String get caloriesDisplay {
     final keyNutrients = nutrition['key_nutrients'] as Map<String, dynamic>?;
     if (keyNutrients == null) return '—';
     for (final entry in keyNutrients.entries) {
       if (entry.key.toLowerCase().contains('energy') ||
           entry.key.toLowerCase().contains('calorie')) {
-        final val = (entry.value['value'] ?? 0).toStringAsFixed(0);
-        return '$val kcal';
+        return '${(entry.value['value'] ?? 0).toStringAsFixed(0)} kcal';
       }
     }
     return '—';
   }
 
-  // Extracts protein string from USDA nutrition data
   String get proteinDisplay {
     final keyNutrients = nutrition['key_nutrients'] as Map<String, dynamic>?;
     if (keyNutrients == null) return '—';
     for (final entry in keyNutrients.entries) {
       if (entry.key.toLowerCase().contains('protein')) {
-        final val = (entry.value['value'] ?? 0).toStringAsFixed(1);
-        return '${val}g';
+        return '${(entry.value['value'] ?? 0).toStringAsFixed(1)}g';
       }
     }
     return '—';
   }
 }
 
-// ─── API Service ─────────────────────────────────────────────────────────────
+// ─── API Service ──────────────────────────────────────────────────────────────
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.8.132:8000';
-  //static const String baseUrl = 'http://10.0.2.2:8000';
+  // All pages reference kBaseUrl — only update the const above
+  static String get baseUrl => kBaseUrl;
 
-  // Fetch trending recipes for home page
+  // Trending recipes — home page
   static Future<List<TrendingRecipe>> getTrendingRecipes({int limit = 50}) async {
     try {
-      final uri = Uri.parse('$baseUrl/recipes/trending?limit=$limit');
+      final uri = Uri.parse('$kBaseUrl/recipes/trending?limit=$limit');
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> recipesJson = data['recipes'] ?? [];
         return recipesJson.map((r) => TrendingRecipe.fromJson(r)).toList();
-      } else {
-        throw Exception('Server error: ${response.statusCode}');
       }
+      throw Exception('Server error: ${response.statusCode}');
     } catch (e) {
       throw Exception('Failed to load trending recipes: $e');
     }
   }
 
-  // Search for a recipe by name
+  // Recipe search — home page
   static Future<SearchedRecipe> searchRecipe(String query) async {
     try {
       final uri = Uri.parse(
-          '$baseUrl/recipes/search?query=${Uri.encodeComponent(query)}');
+          '$kBaseUrl/recipes/search?query=${Uri.encodeComponent(query)}');
       final response = await http.get(uri).timeout(const Duration(seconds: 15));
-
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return SearchedRecipe.fromJson(data);
-      } else {
-        throw Exception('Server error: ${response.statusCode}');
+        return SearchedRecipe.fromJson(jsonDecode(response.body));
       }
+      throw Exception('Server error: ${response.statusCode}');
     } catch (e) {
       throw Exception('Search failed: $e');
+    }
+  }
+
+  // BMI calculation — bmi_screen.dart
+  static Future<Map<String, dynamic>> calculateBmi(Map<String, dynamic> body) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$kBaseUrl/bmi/calculate'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      final detail = jsonDecode(response.body)['detail'] ?? 'Unknown error';
+      throw Exception(detail);
+    } catch (e) {
+      throw Exception('$e');
     }
   }
 }
