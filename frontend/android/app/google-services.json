@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "19531418982",
+    "project_id": "flutter-fitness-app-ea9be",
+    "storage_bucket": "flutter-fitness-app-ea9be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:19531418982:android:a4d59d35588da790b18ca7",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "19531418982-425cbuqe1b4b6shjqtsvv2kivberp9mi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.flutter_application_1",
+            "certificate_hash": "98cf38ab47c8636255c395b2d22dd542c5eb76ac"
+          }
+        },
+        {
+          "client_id": "19531418982-q14vvh6ijk3tdgti50tpk14s1hsiesir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDub6C1GUhQtIRKCOLjniSUdtFCqPMVN3Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "19531418982-q14vvh6ijk3tdgti50tpk14s1hsiesir.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "19531418982-lf0eth6ffar1rv60brdb7gcp5o8q5lrr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.flutterApplication1"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
