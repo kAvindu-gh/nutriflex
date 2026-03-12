@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 // ─── Base URL — change ONLY this one line when your IP changes ───────────────
 // Physical device : your machine's IPv4 (e.g. 192.168.8.132)
 // Emulator        : 10.0.2.2
-const String kBaseUrl = 'http://192.168.8.132:8000';
+const String kBaseUrl = 'http://192.168.1.5:8000';
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
 

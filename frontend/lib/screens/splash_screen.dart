@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,7 +19,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   static const _bg1 = Color(0xFF103E23);
   static const _bg2 = Color(0xFF000000);
   static const _green = Color(0xFF00E676);
-  static const _greenDim = Color(0xFF00C853);
   static const _greenGlow = Color(0xFF69F0AE);
 
   @override
@@ -58,17 +57,20 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _logoCtrl.forward();
     await Future.delayed(const Duration(milliseconds: 650));
     _textCtrl.forward();
-    await Future.delayed(const Duration(seconds: 6));
+
+    // Wait for splash to finish
+    await Future.delayed(const Duration(seconds: 5));
     if (!mounted) return;
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-    final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-    if (!onboardingDone) {
-      Navigator.of(context).pushReplacementNamed('/onboarding');
-    } else if (!isLoggedIn) {
-      Navigator.of(context).pushReplacementNamed('/login');
-    } else {
+
+    // Check Firebase Auth — no SharedPreferences needed
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null && user.emailVerified) {
+      // Already logged in → go to home
       Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      // Not logged in → go to auth gate (login page)
+      Navigator.of(context).pushReplacementNamed('/auth');
     }
   }
 
@@ -124,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     glowColor: _greenGlow, glowIntensity: _glowIntensity.value,
                   )),
 
-                  // Logo — no box, zoom in/out
+                  // Logo
                   Transform.scale(scale: _zoomScale.value, child: SizedBox(
                     width: 180, height: 180,
                     child: Image.asset(
@@ -133,7 +135,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                       errorBuilder: (_, __, ___) => const Icon(Icons.restaurant_menu, color: _green, size: 64),
                     ),
                   )),
-
                 ])),
               ),
             ),
