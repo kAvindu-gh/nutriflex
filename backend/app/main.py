@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers.onboarding import router as onboarding_router
+from app.routers.onboarding_router import router as onboarding_router
 
 app = FastAPI(
     title="NutriFlex API",
