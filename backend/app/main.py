@@ -8,11 +8,13 @@ from pathlib import Path
 # Load environment variables from .env file in the backend directory
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
+from app.routers.map import router as map_router
 
-app = FastAPI(
-    title="NutriFlex API",
-    version="0.1.0",
-)
+ 
+
+app = FastAPI()
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(profile.router, prefix="/api/v1")
+app.include_router(map_router) 
 
 @app.get("/")
 def root():

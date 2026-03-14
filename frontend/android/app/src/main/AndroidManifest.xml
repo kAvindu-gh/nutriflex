@@ -1,6 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<<<<<<< Updated upstream
 <uses-permission android:name="android.permission.INTERNET"/>
     <application
+=======
+
+    xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+<uses-permission android:name="android.permission.INTERNET"/>
+   
+   
+   <application
+>>>>>>> Stashed changes
         android:label="frontend"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -19,6 +30,10 @@
                  while the Flutter UI initializes. After that, this theme continues
                  to determine the Window background behind the Flutter UI. -->
             <meta-data
+              
+              android:name="MAPBOX_ACCESS_TOKEN"
+              android:value="pk.eyJ1IjoieW91cnVzZXJuYW1lIiwiYSI6ImNr..."
+
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
