@@ -6,7 +6,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 import re
 from datetime import datetime
-from app.routers.bmi import calculate_bmi
 import firebase_admin
 from firebase_admin import credentials, firestore
 from app.services.usda_service import USDAService
@@ -22,7 +21,7 @@ usda_service = USDAService()
 db = usda_service.db
 
 # Initialize the user Firebase
-user_firebase_key_path = os.getenv("FIREBASE_KEY_PATH", "app/user_firebase-key.json")
+user_firebase_key_path = os.getenv("USER_FIREBASE_KEY_PATH", "app/user_firebase-key.json")
 user_cred = credentials.Certificate(user_firebase_key_path)
 user_app = firebase_admin.initialize_app(user_cred, name="user_app")
 user_db = firestore.client(user_app)
@@ -134,7 +133,7 @@ def add_food(access_token:str,food:str, size:int, food_type:str):
         doc_ref.set(per_size_nutrinets)
         
 
-def get_calory_amount(access_token):
+def get_consumed_amounts(access_token):
     # Get the current date
     today = datetime.now().date()
 
@@ -144,7 +143,7 @@ def get_calory_amount(access_token):
     doc_ref = user_db.collection("users").document(access_token).collection("Nutrients_history").document(date_doc)
     
     if not doc_ref:
-        return "0 kcal"
+        return ["0","0","0","0"]
     
     doc = doc_ref.get()
 
@@ -153,35 +152,48 @@ def get_calory_amount(access_token):
     # Calories amount in kcal
     calorie_amount = data.get("Energy(kcal)")
 
-    return calorie_amount
+    # Protein amount
+    proteins_with_unit = data.get("Proteins")
+    Proteins_and_unit = re.match(r"([\d.]+)([^\d]+)", proteins_with_unit)
+
+    protein_amount = Proteins_and_unit.group(1)
+
+    # fat amount
+
+    #SFA 
+    SFA_with_unit = data.get("SFA")
+    SFA_and_unit = re.match(r"([\d.]+)([^\d]+)", SFA_with_unit)
+    SFA_amount = float(SFA_and_unit.group(1))
+
+    #PUFA
+    PUFA_with_unit = data.get("PUFA")
+    PUFA_and_unit = re.match(r"([\d.]+)([^\d]+)", PUFA_with_unit)
+    PUFA_amount = float(PUFA_and_unit.group(1))
+
+    #MUFA
+    MUFA_with_unit = data.get("MUFA")
+    MUFA_and_unit = re.match(r"([\d.]+)([^\d]+)", MUFA_with_unit)
+    MUFA_amount = float(MUFA_and_unit.group(1))
+
+    # ALL FAT AMOUNT
+    FAT_amount = str(SFA_amount+PUFA_amount+MUFA_amount)
+
+    # Carbohydrate amounts
+    Carbs_with_unit = data.get("Carbohydrates")
+    Carbs_and_unit = re.match(r"([\d.]+)([^\d]+)", Carbs_with_unit)
+    Carbs_amount = float(Carbs_and_unit.group(1))
+    
+
+    return calorie_amount, FAT_amount, protein_amount, Carbs_amount
 
 
     
 @router.post("/add_physical_data_to_user")
-def add_physical_measurements(access_token:str,weight:int , height:float, age:int, gender:str, activityLevel:str, goal:str):
+def add_physical_measurements(access_token:str,weight:int , height:float, age:int, gender:str, activityLevel:str, goal:str, BMI:str, TDEE:str, status:str ):
     
-    # Converts the strings to enums
-    gender_enum = Gender(gender)
-    activity_enum = ActivityLevel(activityLevel)
-    goal_enum = Goal(goal)
+   
 
 
-
-    results = BMIService.calculate_all(
-        weight_kg=weight,
-        height_cm=height,
-        age=age,
-        gender=gender_enum,
-        activity_level=activity_enum,
-        goal=goal_enum
-    )
-
-
-    
-
-    BMI = results["bmi"]
-    status = results["category"]
-    TDEE = results["tdee"]
 
 
     # Path of the database
@@ -196,7 +208,8 @@ def add_physical_measurements(access_token:str,weight:int , height:float, age:in
                  "BMI":BMI,
                  "TDEE":TDEE,
                  "Status": status,
-                 "Goal": goal}
+                 "Goal": goal,
+                 "Activity Level": activityLevel}
     
     # Add the data
     doc_ref.set(user_data)
@@ -204,57 +217,32 @@ def add_physical_measurements(access_token:str,weight:int , height:float, age:in
 
 
 @router.post("/add_daily_nutrient_requirements")
-def add_requirements(access_token:str):
+def add_requirements(access_token:str, Calory_requirement_low:str, protien_requirement_low:str, carbohydrate_requirement_low:str,fat_calory_requirements_low:str ):
 
-    doc_ref_physical_measurements = user_db.collection("users").document(access_token).collection("personal data").document("Physical measurements")
+    
 
-    # get the physical measurements
-    physical_measurements_document = doc_ref_physical_measurements.get()
-
-
-    physical_measurements = physical_measurements_document.to_dict()
+   
 
     # Dict to store requirements
     requirements = {}
 
-    goal = physical_measurements.get("Goal")
-    TDEE = physical_measurements.get("TDEE")
-    gender = physical_measurements.get("Gender")
-    weight = physical_measurements.get("weight")
+    
 
     
 
-    if goal=="muscle_gain":
     
-        requirements["Calory_requirement_low"] = str(round(TDEE+TDEE*0.05,2))+"kcal"
-        requirements["Calory_requirement_high"] = str(round(TDEE+TDEE*0.2,2))+"kcal"
-        requirements["protien_requirement_loss"] = str(round(weight*1.6,2))+"g"
-        requirements["protien_requirement_high"] = str(round(weight*2.2,2))+"g"
-        requirements["carbohydrate_requirement_low"] = str(round(weight*3,2))+"g"
-        requirements["carbohydrate_requirement_high"] = str(round(weight*6,2))+"g"
-        requirements["fat_calory_requirements_low"] = str(round(weight*0.8,2))+"g"
-        requirements["fat_calory_requirements_high"] = str(round(weight*1.2,2))+"g"
+    
+    requirements["Calory_requirement_low"] = str(round(Calory_requirement_low/ 4.184,2))+"kcal"
+        
+    requirements["protien_requirement_low"] = str(protien_requirement_low)+"g"
+        
+    requirements["carbohydrate_requirement_low"] = str(carbohydrate_requirement_low)+"g"
+        
+    requirements["fat_calory_requirements_low"] = str(fat_calory_requirements_low)+"g"
 
 
-    elif goal=="maintenance":
-        requirements["Calory_requirement_low"] = str(TDEE)+"kcal"
-        requirements["Calory_requirement_high"] = str(TDEE)+"kcal"
-        requirements["Protein_requirement_low"] = str(round(weight*1,2))+"g"
-        requirements["Protein_requirement_high"] = str(round(weight*1.2,2))+"g"
-        requirements["carbohydrate_requirement_low"] = str(round(weight*4,2))+"g"
-        requirements["carbohydrate_requirement_high"] = str(round(weight*5,2))+"g"
-        requirements["fat_calory_requirements_low"] = str(round(weight*0.8,2))+"g"
-        requirements["fat_calory_requirements_high"] = str(round(weight*1,2))+"g"
+    
 
-    elif goal=="weight_loss":
-        requirements["Calory_requirement_low"] = str(round(TDEE-TDEE*0.2,2))+"kcal"
-        requirements["Calory_requirement_high"] = str(round(TDEE-TDEE*0.1,2))+"kcal"
-        requirements["Protein_requirement_low"] = str(round(weight*1.6,2))+"g"
-        requirements["Protein_requirement_high"] = str(round(weight*2.2,2))+"g"
-        requirements["carbohydrate_requirement_low"] = str(round(weight*2,2))+"g"
-        requirements["carbohydrate_requirement_high"] = str(round(weight*3,2))+"g"
-        requirements["fat_calory_requirements_low"] = str(round(weight*0.6,2))+"g"
-        requirements["fat_calory_requirements_high"] = str(round(weight*0.8,2))+"g"
     # Create a reference to store the daily requirements
     doc_ref_daily_requirements = user_db.collection("users").document(access_token).collection("personal data").document("Daily Requirements")
 
@@ -268,8 +256,8 @@ def get_requirements(access_token:str):
     
     
     data = doc.to_dict()
-    print(data)
-    return data["Calory_requirement_low"]
+    
+    return {"Calory_requirement_low":data["Calory_requirement_low"], "Protein_requirement_low": data["Protein_requirement_low"], "Carbohydrate_requirement_low": data["carbohydrate_requirement_low"], "Fat_requirement_low":data["fat_calory_requirements_low"]}
 
 @router.post("/Meal_Prep_With_Five_Cards")
 def add_meal_plan_to_user(access_token:str, rice:str, rice_size:int, meat:str,meat_size:int, vegetable1: str,vegetable1_size:int, vegetable2: str, vegetable2_size:int, mallum:str,mallum_size:int, salad:str, salad_size:int):
@@ -280,10 +268,59 @@ def add_meal_plan_to_user(access_token:str, rice:str, rice_size:int, meat:str,me
     add_food(access_token, mallum, mallum_size, "Mallum")
     add_food(access_token, salad, salad_size, "Salads")
 
-    calory_requirement_low = get_requirements(access_token)
-    consumed_calorie_amount = get_calory_amount(access_token)
+    requirements_low = get_requirements(access_token)
+    consumed_amounts = get_consumed_amounts(access_token)
 
-    return{"Calory consumed: ":consumed_calorie_amount+"kcal", "Calory requirement: ":calory_requirement_low}
+    # Calculate calory data
+
+    
+    
+    calory_requirement_with_unit  = requirements_low["Calory_requirement_low"]
+    calory_requirement = re.match(r"([\d.]+)([^\d]+)", calory_requirement_with_unit)
+    calory_requirement_in_float = float(calory_requirement.group(1))
+    calory_consumed_in_float= float(consumed_amounts[0])
+    calory_consumed_percentage =  round((calory_consumed_in_float/calory_requirement_in_float)*100,4)
+
+
+    # Calculate Protein data
+    protein_requirement_with_unit  = requirements_low["Protein_requirement_low"]
+    protein_requirement = re.match(r"([\d.]+)([^\d]+)", protein_requirement_with_unit)
+    protein_requirement_in_float = float(protein_requirement.group(1))
+    protein_consumed_in_float= float(consumed_amounts[1])
+    protein_consumed_percentage =  round((calory_consumed_in_float/calory_requirement_in_float)*100,4)
+
+    # Calculate carbs data
+    carbs_requirement_with_unit  = requirements_low["Carbohydrate_requirement_low"]
+    carbs_requirement = re.match(r"([\d.]+)([^\d]+)", carbs_requirement_with_unit)
+    carbs_requirement_in_float = float(carbs_requirement.group(1))
+    carbs_consumed_in_float= float(consumed_amounts[2])
+    carbs_consumed_percentage =  round((carbs_consumed_in_float/carbs_requirement_in_float)*100,4)
+
+    # Calculate fat data
+    fat_requirement_with_unit  = requirements_low["Fat_requirement_low"]
+    fat_requirement = re.match(r"([\d.]+)([^\d]+)", fat_requirement_with_unit)
+    fat_requirement_in_float = float(fat_requirement.group(1))
+    fat_consumed_in_float= float(consumed_amounts[3])
+    fat_consumed_percentage =  round((fat_consumed_in_float/fat_requirement_in_float)*100,4)
+
+
+    
+
+
+
+
+    return{"Calory consumed: ":str(calory_consumed_in_float)+"kcal", 
+           "Calory requirement: ":str(calory_requirement_in_float)+"kcal",
+           "Calory consumed percentage: ": calory_consumed_percentage,
+           "Protein consumed: ": str(protein_consumed_in_float)+"g",
+           "Protein requirement: ":str(protein_requirement_in_float)+"g",
+           "Protein consumed percentage: ": protein_consumed_percentage,
+           "Carbohydrate consumed: ": str(carbs_consumed_in_float)+"g",
+           "Carbohydrate requirement: ":str(carbs_requirement_in_float)+"g",
+           "Carbohydrate consumed percentage: ": carbs_consumed_percentage,
+           "Fat consumed: ": str(fat_consumed_in_float)+"g",
+           "Fat requirement: ":str(fat_requirement_in_float)+"g",
+           "Fat consumed percentage: ": fat_consumed_percentage,}
 
 
 
