@@ -70,30 +70,27 @@ const List<String> kStepKeys = [
 class SlideUpFadeRoute extends PageRouteBuilder {
   final Widget page;
   SlideUpFadeRoute({required this.page})
-    : super(
-        transitionDuration: const Duration(milliseconds: 500),
-        reverseTransitionDuration: const Duration(milliseconds: 400),
-        pageBuilder: (_, __, ___) => page,
-        transitionsBuilder: (_, animation, __, child) {
-          final slide =
-              Tween<Offset>(
-                begin: const Offset(0, 0.08),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-              );
-          final fade = Tween<double>(begin: 0, end: 1).animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: const Interval(0, 0.6, curve: Curves.easeOut),
-            ),
-          );
-          return FadeTransition(
-            opacity: fade,
-            child: SlideTransition(position: slide, child: child),
-          );
-        },
-      );
+      : super(
+          transitionDuration: const Duration(milliseconds: 500),
+          reverseTransitionDuration: const Duration(milliseconds: 400),
+          pageBuilder: (_, __, ___) => page,
+          transitionsBuilder: (_, animation, __, child) {
+            final slide = Tween<Offset>(
+              begin: const Offset(0, 0.08),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+            final fade = Tween<double>(begin: 0, end: 1).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: const Interval(0, 0.6, curve: Curves.easeOut),
+              ),
+            );
+            return FadeTransition(
+              opacity: fade,
+              child: SlideTransition(position: slide, child: child),
+            );
+          },
+        );
 }
 
 // ─── WELCOME SCREEN ─────────────────────────────────────────────────────
@@ -117,46 +114,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800));
 
     _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0, 0.5, curve: Curves.elasticOut),
-      ),
+      CurvedAnimation(parent: _ctrl, curve: const Interval(0, 0.5, curve: Curves.elasticOut)),
     );
     _logoOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0, 0.3, curve: Curves.easeOut),
-      ),
+      CurvedAnimation(parent: _ctrl, curve: const Interval(0, 0.3, curve: Curves.easeOut)),
     );
     _textOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.45, 0.75, curve: Curves.easeOut),
-      ),
+      CurvedAnimation(parent: _ctrl, curve: const Interval(0.45, 0.75, curve: Curves.easeOut)),
     );
-    _textSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(
-          CurvedAnimation(
-            parent: _ctrl,
-            curve: const Interval(0.45, 0.75, curve: Curves.easeOut),
-          ),
-        );
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _ctrl, curve: const Interval(0.45, 0.75, curve: Curves.easeOut)),
+    );
     _btnOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.65, 1.0, curve: Curves.easeOut),
-      ),
+      CurvedAnimation(parent: _ctrl, curve: const Interval(0.65, 1.0, curve: Curves.easeOut)),
     );
-    _glowPulse = Tween<double>(
-      begin: 0.4,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _glowPulse = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
 
     _ctrl.forward();
   }
@@ -225,12 +202,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           child: Column(
                             children: [
                               ShaderMask(
-                                shaderCallback: (bounds) =>
-                                    const LinearGradient(
-                                      colors: [Colors.white, Color(0xFFCCCCCC)],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ).createShader(bounds),
+                                shaderCallback: (bounds) => const LinearGradient(
+                                  colors: [Colors.white, Color(0xFFCCCCCC)],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ).createShader(bounds),
                                 child: const Text(
                                   "Welcome to\nNutriFlex",
                                   textAlign: TextAlign.center,
@@ -290,24 +266,23 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   Widget _buildLogo() {
     return Container(
-      width: 120,
-      height: 120,
+      width: 220,
+      height: 220,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF00E676), Color(0xFF00BFA5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        border: Border.all(
+          color: kGreen,
+          width: 2.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: kGreen.withOpacity(0.4),
-            blurRadius: 50,
-            spreadRadius: 10,
-          ),
-        ],
       ),
-      child: const Icon(Icons.spa_rounded, size: 56, color: Colors.black),
+      child: ClipOval(
+        child: Image.asset(
+          'lib/assets/NutriFlex_Logo_1.jpeg',
+          width: 220,
+          height: 220,
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 }
@@ -395,12 +370,12 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
-  int? _selected; // used for all steps except medical
-  Set<int> _multiSelected = {}; // used only for step 2 (medical)
+  int? _selected;                    // used for all steps except medical
+  Set<int> _multiSelected = {};      // used only for step 2 (medical)
   bool _isLoading = false;
 
   bool get _isMedicalStep => widget.step == 2;
-  static const int _noneIndex = 3; // "None" is the 4th card (index 3)
+  static const int _noneIndex = 3;   // "None" is the 4th card (index 3)
 
   late AnimationController _entryCtrl;
   late AnimationController _btnCtrl;
@@ -468,9 +443,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // ── KEY METHOD: saves to Firebase on every step ──
   Future<void> _onContinue() async {
-    final hasSelection = _isMedicalStep
-        ? _multiSelected.isNotEmpty
-        : _selected != null;
+    final hasSelection = _isMedicalStep ? _multiSelected.isNotEmpty : _selected != null;
     if (!hasSelection || _isLoading) return;
 
     setState(() => _isLoading = true);
@@ -527,7 +500,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 height: 200,
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
-                    colors: [kGreen.withOpacity(0.06), Colors.transparent],
+                    colors: [
+                      kGreen.withOpacity(0.06),
+                      Colors.transparent,
+                    ],
                     radius: 1.0,
                   ),
                 ),
@@ -535,10 +511,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 20,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -608,20 +581,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           label: _isLoading
                               ? "Saving..."
                               : widget.step == kSteps.length - 1
-                              ? "Finish"
-                              : "Continue",
-                          onPressed:
-                              (_isMedicalStep
-                                      ? _multiSelected.isNotEmpty
-                                      : _selected != null) &&
-                                  !_isLoading
+                                  ? "Finish"
+                                  : "Continue",
+                          onPressed: (_isMedicalStep ? _multiSelected.isNotEmpty : _selected != null) && !_isLoading
                               ? _onContinue
                               : null,
-                          isEnabled:
-                              (_isMedicalStep
-                                  ? _multiSelected.isNotEmpty
-                                  : _selected != null) &&
-                              !_isLoading,
+                          isEnabled: (_isMedicalStep ? _multiSelected.isNotEmpty : _selected != null) && !_isLoading,
                         );
                       },
                     ),
@@ -665,10 +630,7 @@ class _ProgressHeader extends StatelessWidget {
         Expanded(
           child: TweenAnimationBuilder<double>(
             key: ValueKey(progress),
-            tween: Tween(
-              begin: progress > 0.21 ? progress - 0.2 : 0.0,
-              end: progress,
-            ),
+            tween: Tween(begin: progress > 0.21 ? progress - 0.2 : 0.0, end: progress),
             duration: const Duration(milliseconds: 600),
             curve: Curves.easeInOutCubic,
             builder: (_, val, __) => ClipRRect(
@@ -742,10 +704,9 @@ class _StaggeredCardState extends State<_StaggeredCard>
       duration: const Duration(milliseconds: 150),
       reverseDuration: const Duration(milliseconds: 200),
     );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 0.93,
-    ).animate(CurvedAnimation(parent: _tapCtrl, curve: Curves.easeOut));
+    _scale = Tween<double>(begin: 1.0, end: 0.93).animate(
+      CurvedAnimation(parent: _tapCtrl, curve: Curves.easeOut),
+    );
   }
 
   @override
@@ -782,7 +743,9 @@ class _StaggeredCardState extends State<_StaggeredCard>
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
                   decoration: BoxDecoration(
-                    color: widget.isSelected ? kGreen.withOpacity(0.12) : kCard,
+                    color: widget.isSelected
+                        ? kGreen.withOpacity(0.12)
+                        : kCard,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: widget.isSelected ? kGreen : kCardBorder,
@@ -794,7 +757,7 @@ class _StaggeredCardState extends State<_StaggeredCard>
                               color: kGreen.withOpacity(0.2),
                               blurRadius: 20,
                               spreadRadius: 2,
-                            ),
+                            )
                           ]
                         : null,
                   ),
@@ -887,13 +850,15 @@ class _AnimatedEntry extends StatelessWidget {
         curve: Interval(start, end, curve: Curves.easeOut),
       ),
     );
-    final slide = Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero)
-        .animate(
-          CurvedAnimation(
-            parent: controller,
-            curve: Interval(start, end, curve: Curves.easeOut),
-          ),
-        );
+    final slide = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: Interval(start, end, curve: Curves.easeOut),
+      ),
+    );
 
     return AnimatedBuilder(
       animation: controller,
@@ -927,37 +892,17 @@ class _AllDoneScreenState extends State<AllDoneScreen>
   void initState() {
     super.initState();
 
-    _circleCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _spinCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _checkCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _textCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _dotsCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
+    _circleCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _spinCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _checkCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _textCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _dotsCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))
+      ..repeat(reverse: true);
 
     _bubbleCtrls = List.generate(
       3,
-      (_) => AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 600),
-      ),
+      (_) => AnimationController(vsync: this, duration: const Duration(milliseconds: 600)),
     );
 
     for (int i = 0; i < 3; i++) {
@@ -1026,45 +971,19 @@ class _AllDoneScreenState extends State<AllDoneScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   AnimatedBuilder(
-                    animation: Listenable.merge([
-                      _circleCtrl,
-                      _spinCtrl,
-                      _checkCtrl,
-                      _pulseCtrl,
-                    ]),
+                    animation: Listenable.merge([_circleCtrl, _spinCtrl, _checkCtrl, _pulseCtrl]),
                     builder: (_, __) {
                       final circleScale = Tween<double>(begin: 0.0, end: 1.0)
-                          .animate(
-                            CurvedAnimation(
-                              parent: _circleCtrl,
-                              curve: Curves.elasticOut,
-                            ),
-                          )
+                          .animate(CurvedAnimation(parent: _circleCtrl, curve: Curves.elasticOut))
                           .value;
-                      final spinAngle =
-                          Tween<double>(begin: 0, end: 2 * math.pi)
-                              .animate(
-                                CurvedAnimation(
-                                  parent: _spinCtrl,
-                                  curve: Curves.easeInOutCubic,
-                                ),
-                              )
-                              .value;
+                      final spinAngle = Tween<double>(begin: 0, end: 2 * math.pi)
+                          .animate(CurvedAnimation(parent: _spinCtrl, curve: Curves.easeInOutCubic))
+                          .value;
                       final checkOpacity = Tween<double>(begin: 0, end: 1)
-                          .animate(
-                            CurvedAnimation(
-                              parent: _checkCtrl,
-                              curve: Curves.easeOut,
-                            ),
-                          )
+                          .animate(CurvedAnimation(parent: _checkCtrl, curve: Curves.easeOut))
                           .value;
                       final checkScale = Tween<double>(begin: 0.4, end: 1.0)
-                          .animate(
-                            CurvedAnimation(
-                              parent: _checkCtrl,
-                              curve: Curves.elasticOut,
-                            ),
-                          )
+                          .animate(CurvedAnimation(parent: _checkCtrl, curve: Curves.elasticOut))
                           .value;
 
                       return Transform.scale(
@@ -1083,9 +1002,7 @@ class _AllDoneScreenState extends State<AllDoneScreen>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: kGreen.withOpacity(
-                                    0.3 + 0.2 * _pulseCtrl.value,
-                                  ),
+                                  color: kGreen.withOpacity(0.3 + 0.2 * _pulseCtrl.value),
                                   blurRadius: 40 + 20 * _pulseCtrl.value,
                                   spreadRadius: 5,
                                 ),
@@ -1121,10 +1038,9 @@ class _AllDoneScreenState extends State<AllDoneScreen>
                           child: Column(
                             children: [
                               ShaderMask(
-                                shaderCallback: (bounds) =>
-                                    const LinearGradient(
-                                      colors: [Colors.white, Color(0xFFDDDDDD)],
-                                    ).createShader(bounds),
+                                shaderCallback: (bounds) => const LinearGradient(
+                                  colors: [Colors.white, Color(0xFFDDDDDD)],
+                                ).createShader(bounds),
                                 child: const Text(
                                   "All Done!",
                                   style: TextStyle(
@@ -1164,46 +1080,24 @@ class _AllDoneScreenState extends State<AllDoneScreen>
                             animation: _bubbleCtrls[i],
                             builder: (_, __) {
                               final bounce = Tween<double>(begin: 0, end: -14)
-                                  .animate(
-                                    CurvedAnimation(
-                                      parent: _bubbleCtrls[i],
-                                      curve: Curves.easeInOut,
-                                    ),
-                                  )
+                                  .animate(CurvedAnimation(parent: _bubbleCtrls[i], curve: Curves.easeInOut))
                                   .value;
-                              final scale =
-                                  Tween<double>(begin: 0.85, end: 1.15)
-                                      .animate(
-                                        CurvedAnimation(
-                                          parent: _bubbleCtrls[i],
-                                          curve: Curves.easeInOut,
-                                        ),
-                                      )
-                                      .value;
+                              final scale = Tween<double>(begin: 0.85, end: 1.15)
+                                  .animate(CurvedAnimation(parent: _bubbleCtrls[i], curve: Curves.easeInOut))
+                                  .value;
                               return Transform.translate(
                                 offset: Offset(0, bounce),
                                 child: Transform.scale(
                                   scale: scale,
                                   child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                    ),
+                                    margin: const EdgeInsets.symmetric(horizontal: 6),
                                     width: 14,
                                     height: 14,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: kGreen.withOpacity(
-                                        i == 0
-                                            ? 1.0
-                                            : i == 1
-                                            ? 0.65
-                                            : 0.35,
-                                      ),
+                                      color: kGreen.withOpacity(i == 0 ? 1.0 : i == 1 ? 0.65 : 0.35),
                                       boxShadow: [
-                                        BoxShadow(
-                                          color: kGreen.withOpacity(0.4),
-                                          blurRadius: 8,
-                                        ),
+                                        BoxShadow(color: kGreen.withOpacity(0.4), blurRadius: 8),
                                       ],
                                     ),
                                   ),
@@ -1268,10 +1162,9 @@ class _GreenButtonState extends State<_GreenButton>
       duration: const Duration(milliseconds: 120),
       reverseDuration: const Duration(milliseconds: 200),
     );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 0.96,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _scale = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
   }
 
   @override
@@ -1316,7 +1209,7 @@ class _GreenButtonState extends State<_GreenButton>
                         color: kGreen.withOpacity(0.25),
                         blurRadius: 20,
                         offset: const Offset(0, 6),
-                      ),
+                      )
                     ]
                   : null,
             ),

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class OnboardingService {
   // ── Use your PC's actual local IP + port 8000 ──
-  static const String _baseUrl = 'http://10.0.2.2:8000';
+  static const String _baseUrl = 'http://10.31.27.66:8000';
 
   // ── Hardcoded test user — swap for FirebaseAuth uid later ──
   static const String testUserId = 'Ghd8IfB4nEAgSxu4s9L4';
