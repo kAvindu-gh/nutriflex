@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-
+ 
 // ─────────────────────────────────────────────
 //  Entry point – wrap in your existing app
 // ─────────────────────────────────────────────
 void main() => runApp(const MyApp());
-
+ 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
+ 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,29 +17,27 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+ 
 // ─────────────────────────────────────────────
 //  MainScaffold – bottom nav with 4 tabs
 // ─────────────────────────────────────────────
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
-
+ 
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
 }
-
+ 
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
-
-  // Pages list – only Alerts is fully implemented here.
-  // Replace the placeholders with your real pages.
+ 
   late final List<Widget> _pages = [
     const _PlaceholderPage(label: 'Home'),
     const _PlaceholderPage(label: 'Meal Prep'),
     const _PlaceholderPage(label: 'BMI'),
-    const NotificationsPage(), // index 3 → Alerts
+    const NotificationsPage(),
   ];
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,25 +50,25 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
-
+ 
 // ─────────────────────────────────────────────
-//  Bottom navigation bar  (matches screenshot 2)
+//  Bottom navigation bar
 // ─────────────────────────────────────────────
 class _BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
-
+ 
   const _BottomNav({required this.currentIndex, required this.onTap});
-
+ 
+  static const _items = [
+    _NavItem(icon: Icons.home_outlined,           activeIcon: Icons.home,              label: 'Home'),
+    _NavItem(icon: Icons.restaurant_menu_outlined, activeIcon: Icons.restaurant_menu,   label: 'Meal Prep'),
+    _NavItem(icon: Icons.calculate_outlined,       activeIcon: Icons.calculate,         label: 'BMI'),
+    _NavItem(icon: Icons.notifications_outlined,   activeIcon: Icons.notifications,     label: 'Alerts'),
+  ];
+ 
   @override
   Widget build(BuildContext context) {
-    const items = [
-      _NavItem(icon: Icons.home_outlined, label: 'Home'),
-      _NavItem(icon: Icons.restaurant_menu_outlined, label: 'Meal Prep'),
-      _NavItem(icon: Icons.calculate_outlined, label: 'BMI'),
-      _NavItem(icon: Icons.notifications_outlined, label: 'Alerts'),
-    ];
-
     return Container(
       decoration: BoxDecoration(
         color: AppColors.navBg,
@@ -78,13 +76,11 @@ class _BottomNav extends StatelessWidget {
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            // Original: color: Colors.black.withOpacity(0.4),
-            // Fix: Use Color.fromRGBO or Colors.black.withAlpha instead of deprecated withOpacity.
             color: Color.fromRGBO(0, 0, 0, 0.4),
             blurRadius: 20,
-            offset: const Offset(0, -4),
+            offset: Offset(0, -4),
           ),
         ],
       ),
@@ -94,38 +90,28 @@ class _BottomNav extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(items.length, (i) {
+            children: List.generate(_items.length, (i) {
               final selected = i == currentIndex;
               return GestureDetector(
                 onTap: () => onTap(i),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        selected
-                            ? _activeIcon(i)
-                            : items[i].icon,
-                        color:
-                            selected ? AppColors.green : AppColors.navUnselected,
+                        selected ? _items[i].activeIcon : _items[i].icon,
+                        color: selected ? AppColors.green : AppColors.navUnselected,
                         size: 26,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        items[i].label,
+                        _items[i].label,
                         style: TextStyle(
-                          color: selected
-                              ? AppColors.green
-                              : AppColors.navUnselected,
+                          color: selected ? AppColors.green : AppColors.navUnselected,
                           fontSize: 11,
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                         ),
                       ),
                     ],
@@ -138,98 +124,117 @@ class _BottomNav extends StatelessWidget {
       ),
     );
   }
-
-  IconData _activeIcon(int i) {
-    switch (i) {
-      case 0:
-        return Icons.home;
-      case 1:
-        return Icons.restaurant_menu;
-      case 2:
-        return Icons.calculate;
-      case 3:
-        return Icons.notifications;
-      default:
-        return Icons.circle;
-    }
-  }
 }
-
+ 
 class _NavItem {
   final IconData icon;
+  final IconData activeIcon;
   final String label;
-  const _NavItem({required this.icon, required this.label});
+  const _NavItem({required this.icon, required this.activeIcon, required this.label});
 }
-
+ 
 // ─────────────────────────────────────────────
-//  Notifications Page  (matches screenshot 1)
+//  Data model
+// ─────────────────────────────────────────────
+class _NotifData {
+  final IconData icon;
+  final Color    iconBg;
+  final String   title;
+  final String   body;
+  final String   time;
+  bool           isRead; // mutable so Mark All Read can update it
+ 
+  _NotifData({
+    required this.icon,
+    required this.iconBg,
+    required this.title,
+    required this.body,
+    required this.time,
+    required this.isRead,
+  });
+}
+ 
+// ─────────────────────────────────────────────
+//  Notifications Page
 // ─────────────────────────────────────────────
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
-
+ 
   @override
   State<NotificationsPage> createState() => _NotificationsPageState();
 }
-
+ 
 class _NotificationsPageState extends State<NotificationsPage> {
   int _filterIndex = 0; // 0 = All, 1 = Unread
-
+ 
   final List<_NotifData> _notifications = [
     _NotifData(
-      icon: Icons.timer_outlined,
+      icon:   Icons.timer_outlined,
       iconBg: AppColors.greenCard,
-      title: 'New Recipe Available !',
-      body: 'Try our new "super Green Smoothie" perfect for muscle recovery',
-      time: '5m ago',
+      title:  'New Recipe Available !',
+      body:   'Try our new "super Green Smoothie" perfect for muscle recovery',
+      time:   '5m ago',
       isRead: false,
     ),
     _NotifData(
-      icon: Icons.check_box_outlined,
+      icon:   Icons.check_box_outlined,
       iconBg: AppColors.greenCard,
-      title: 'Order Delivered',
-      body: 'Your meal prep ingredients have been delivered',
-      time: '1h ago',
+      title:  'Order Delivered',
+      body:   'Your meal prep ingredients have been delivered',
+      time:   '1h ago',
       isRead: false,
     ),
     _NotifData(
-      icon: Icons.military_tech_outlined,
+      icon:   Icons.military_tech_outlined,
       iconBg: AppColors.darkCard,
-      title: 'Achievement Unlocked !',
-      body: '7-day streak ! Keep up the great work',
-      time: '4m ago',
+      title:  'Achievement Unlocked !',
+      body:   '7-day streak ! Keep up the great work',
+      time:   '4m ago',
       isRead: true,
     ),
     _NotifData(
-      icon: Icons.trending_up,
+      icon:   Icons.trending_up,
       iconBg: AppColors.darkCard,
-      title: 'Weekly Progress',
-      body: 'You hit 95% of your calorie goals this weak',
-      time: '15m ago',
+      title:  'Weekly Progress',
+      body:   'You hit 95% of your calorie goals this week',
+      time:   '15m ago',
       isRead: true,
     ),
     _NotifData(
-      icon: Icons.local_dining_outlined,
+      icon:   Icons.local_dining_outlined,
       iconBg: AppColors.darkCard,
-      title: 'Meal Reminder',
-      body: 'Time for your post-workout protein shake !',
-      time: '8m ago',
+      title:  'Meal Reminder',
+      body:   'Time for your post-workout protein shake !',
+      time:   '8m ago',
       isRead: true,
     ),
   ];
-
+ 
+  // Returns how many notifications are still unread
+  int get _unreadCount => _notifications.where((n) => !n.isRead).length;
+ 
+  // Marks every notification as read and rebuilds the UI
+  void _markAllRead() {
+    setState(() {
+      for (final n in _notifications) {
+        n.isRead = true;
+      }
+    });
+  }
+ 
   @override
   Widget build(BuildContext context) {
     final filtered = _filterIndex == 1
         ? _notifications.where((n) => !n.isRead).toList()
         : _notifications;
-
+ 
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header ──────────────────────────────────
+            // ── Header ──────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
@@ -238,7 +243,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Notifications',
                           style: TextStyle(
                             color: AppColors.white,
@@ -247,7 +252,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
+                        const Text(
                           'Stay updated with your\nfitness journey',
                           style: TextStyle(
                             color: AppColors.subText,
@@ -273,50 +278,42 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ],
               ),
             ),
-
+ 
             const SizedBox(height: 18),
-
-            // ── Filter Tabs ──────────────────────────────
+ 
+            // ── Filter row ───────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  _FilterChip(
-                    label: 'All',
-                    selected: _filterIndex == 0,
-                    onTap: () => setState(() => _filterIndex = 0),
-                  ),
+                  _buildChip('All', 0),
                   const SizedBox(width: 10),
-                  _FilterChip(
-                    label: 'Unread',
-                    selected: _filterIndex == 1,
-                    onTap: () => setState(() => _filterIndex = 1),
-                  ),
+                  _buildChip('Unread', 1),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        for (final n in _notifications) {
-                          n.isRead = true;
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.darkCard,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border, width: 1),
-                      ),
-                      child: Text(
-                        'Mark All read',
-                        style: TextStyle(
-                          color: AppColors.subText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+ 
+                  // ── Mark All Read button ─────────────
+                  // Fades out when there is nothing left to mark
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 250),
+                    opacity: _unreadCount > 0 ? 1.0 : 0.35,
+                    child: GestureDetector(
+                      onTap: _unreadCount > 0 ? _markAllRead : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.darkCard,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: AppColors.border, width: 1),
+                        ),
+                        child: const Text(
+                          'Mark All read',
+                          style: TextStyle(
+                            color: AppColors.subText,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
@@ -324,49 +321,37 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ],
               ),
             ),
-
+ 
             const SizedBox(height: 14),
-
-            // ── Notification cards list ──────────────────
+ 
+            // ── List ─────────────────────────────────
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  ...filtered.map((n) => _NotifCard(data: n)),
-                  const SizedBox(height: 12),
-
-                  // ── Weekly Summary card ──────────────────
-                  _WeeklySummaryCard(),
-
-                  const SizedBox(height: 16),
-                ],
-              ),
+              child: filtered.isEmpty
+                  ? _buildEmptyState()
+                  : ListView(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        ...filtered.map((n) => _NotifCard(data: n)),
+                        const SizedBox(height: 12),
+                        const _WeeklySummaryCard(),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-// ─────────────────────────────────────────────
-//  Filter chip widget
-// ─────────────────────────────────────────────
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+ 
+  // Filter chip with optional unread badge
+  Widget _buildChip(String label, int index) {
+    final selected = _filterIndex == index;
+    final showBadge = index == 1 && _unreadCount > 0;
+ 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => setState(() => _filterIndex = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -374,48 +359,77 @@ class _FilterChip extends StatelessWidget {
           color: selected ? AppColors.green : AppColors.darkCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? AppColors.green : AppColors.border,
-            width: 1,
-          ),
+              color: selected ? AppColors.green : AppColors.border,
+              width: 1),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.bgDark : AppColors.subText,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? AppColors.bgDark : AppColors.subText,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (showBadge) ...[
+              const SizedBox(width: 6),
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.bgDark : AppColors.green,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$_unreadCount',
+                  style: TextStyle(
+                    color: selected ? AppColors.green : AppColors.bgDark,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
+ 
+  // Empty state when Unread tab has nothing
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.notifications_none_outlined,
+              color: AppColors.subText, size: 56),
+          SizedBox(height: 12),
+          Text('All caught up!',
+              style: TextStyle(
+                  color: AppColors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600)),
+          SizedBox(height: 4),
+          Text('No unread notifications',
+              style: TextStyle(color: AppColors.subText, fontSize: 13)),
+        ],
+      ),
+    );
+  }
 }
-
+ 
 // ─────────────────────────────────────────────
-//  Individual notification card
+//  Notification card
+//  KEY FIX: dot visibility is driven by isRead
 // ─────────────────────────────────────────────
-class _NotifData {
-  final IconData icon;
-  final Color iconBg;
-  final String title;
-  final String body;
-  final String time;
-  bool isRead;
-
-  _NotifData({
-    required this.icon,
-    required this.iconBg,
-    required this.title,
-    required this.body,
-    required this.time,
-    required this.isRead,
-  });
-}
-
 class _NotifCard extends StatelessWidget {
   final _NotifData data;
   const _NotifCard({required this.data});
-
+ 
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -424,12 +438,18 @@ class _NotifCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(
+          // Unread cards get a subtle green border glow
+          color: !data.isRead
+              ? AppColors.green.withAlpha(70)
+              : AppColors.border,
+          width: 1,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon box
+          // Icon
           Container(
             width: 44,
             height: 44,
@@ -440,8 +460,8 @@ class _NotifCard extends StatelessWidget {
             child: Icon(data.icon, color: AppColors.green, size: 22),
           ),
           const SizedBox(width: 12),
-
-          // Text
+ 
+          // Title + body
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,7 +477,7 @@ class _NotifCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   data.body,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.subText,
                     fontSize: 12,
                     height: 1.4,
@@ -466,26 +486,31 @@ class _NotifCard extends StatelessWidget {
               ],
             ),
           ),
-
+ 
           const SizedBox(width: 8),
-
+ 
           // Time + dot
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 data.time,
-                style: TextStyle(color: AppColors.subText, fontSize: 11),
+                style: const TextStyle(
+                    color: AppColors.subText, fontSize: 11),
               ),
               const SizedBox(height: 6),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: AppColors.green,
-                  shape: BoxShape.circle,
-                ),
-              ),
+              // ✅ THE FIX: dot only shows when isRead == false
+              if (!data.isRead)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.green,
+                    shape: BoxShape.circle,
+                  ),
+                )
+              else
+                const SizedBox(width: 8, height: 8), // keeps alignment
             ],
           ),
         ],
@@ -493,11 +518,13 @@ class _NotifCard extends StatelessWidget {
     );
   }
 }
-
+ 
 // ─────────────────────────────────────────────
 //  Weekly Summary card
 // ─────────────────────────────────────────────
 class _WeeklySummaryCard extends StatelessWidget {
+  const _WeeklySummaryCard();
+ 
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -509,7 +536,7 @@ class _WeeklySummaryCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: const [
           Text(
             'Weekly Summary',
             style: TextStyle(
@@ -518,83 +545,77 @@ class _WeeklySummaryCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 14),
-          _SummaryRow(label: 'Meals completed', value: '24/30'),
-          const SizedBox(height: 10),
+          SizedBox(height: 14),
+          _SummaryRow(label: 'Meals completed',     value: '24/30'),
+          SizedBox(height: 10),
           _SummaryRow(label: 'Avg. daily calories', value: '2380'),
-          const SizedBox(height: 10),
-          _SummaryRow(label: 'Goal achievement', value: '85%'),
+          SizedBox(height: 10),
+          _SummaryRow(label: 'Goal achievement',    value: '85%'),
         ],
       ),
     );
   }
 }
-
+ 
 class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
   const _SummaryRow({required this.label, required this.value});
-
+ 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(color: AppColors.subText, fontSize: 13),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.green,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        Text(label,
+            style: const TextStyle(color: AppColors.subText, fontSize: 13)),
+        Text(value,
+            style: const TextStyle(
+              color: AppColors.green,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            )),
       ],
     );
   }
 }
-
+ 
 // ─────────────────────────────────────────────
 //  Placeholder pages for other tabs
 // ─────────────────────────────────────────────
 class _PlaceholderPage extends StatelessWidget {
   final String label;
   const _PlaceholderPage({required this.label});
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       body: Center(
-        child: Text(
-          label,
-          style: const TextStyle(color: AppColors.green, fontSize: 24),
-        ),
+        child: Text(label,
+            style: const TextStyle(
+                color: AppColors.green, fontSize: 24)),
       ),
     );
   }
 }
-
+ 
 // ─────────────────────────────────────────────
-//  Colour palette  (dark green fitness theme)
+//  Colour palette
 // ─────────────────────────────────────────────
 abstract class AppColors {
-  static const Color bgDark = Color(0xFF0A1A0F);       // deepest bg
-  static const Color navBg = Color(0xFF0D1F13);        // bottom nav bg
-  static const Color card = Color(0xFF122218);         // notification card
-  static const Color darkCard = Color(0xFF0F1C14);     // icon bg for grey cards
-  static const Color greenCard = Color(0xFF1A3A22);    // icon bg for green cards
-  static const Color summaryCard = Color(0xFF133020);  // weekly summary card
-  static const Color border = Color(0xFF1E3A28);       // card border
-  static const Color greenBorder = Color(0xFF2A5E38);  // summary card border
-
-  static const Color green = Color(0xFF3DD68C);        // primary accent green
-  static const Color white = Colors.white;
-  static const Color subText = Color(0xFF8CAD96);      // muted text
-  static const Color navUnselected = Color(0xFF5A7A64);
+  static const Color bgDark       = Color(0xFF0A1A0F);
+  static const Color navBg        = Color(0xFF0D1F13);
+  static const Color card         = Color(0xFF122218);
+  static const Color darkCard     = Color(0xFF0F1C14);
+  static const Color greenCard    = Color(0xFF1A3A22);
+  static const Color summaryCard  = Color(0xFF133020);
+  static const Color border       = Color(0xFF1E3A28);
+  static const Color greenBorder  = Color(0xFF2A5E38);
+  static const Color green        = Color(0xFF3DD68C);
+  static const Color white        = Color(0xFFFFFFFF);
+  static const Color subText      = Color(0xFF8CAD96);
+  static const Color navUnselected= Color(0xFF5A7A64);
 }
 
 
