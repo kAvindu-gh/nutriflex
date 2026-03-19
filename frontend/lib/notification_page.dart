@@ -54,7 +54,7 @@ class _MainScaffoldState extends State<MainScaffold> {
 }
 
 // ─────────────────────────────────────────────
-// 
+//  Bottom navigation bar  (matches screenshot 2)
 // ─────────────────────────────────────────────
 class _BottomNav extends StatelessWidget {
   final int currentIndex;
@@ -596,4 +596,5 @@ abstract class AppColors {
   static const Color subText = Color(0xFF8CAD96);      // muted text
   static const Color navUnselected = Color(0xFF5A7A64);
 }
+
 
