@@ -1,11 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from ..models.bmi_models import BMIInput, BMIResponse
 from ..services.bmi_service import BMIService
+from app.routers import nutrients
 
 router = APIRouter(prefix="/bmi", tags=["BMI Calculator"])
 
+
+
+
 @router.post("/calculate", response_model=BMIResponse)
-async def calculate_bmi(data: BMIInput):
+async def calculate_bmi(data: BMIInput, document_id: str):
+
+    
     try:
         results = BMIService.calculate_all(
             weight_kg=data.weight_kg,
@@ -16,6 +22,11 @@ async def calculate_bmi(data: BMIInput):
             goal=data.goal,
             medical_conditions=data.medical_conditions or [],
         )
+        # Passing the data to the add_physical_measurements function in nutrients.py
+        nutrients.add_physical_measurements(document_id, data.weight_kg, data.height_cm, data.age, data.gender, data.activity_level, data.goal, results["bmi"],results["tdee"], results["category"] )
+        nutrients.add_requirements(document_id, results["daily_calories"], results["protein_g"], results["carbs_g"], results["fat_g"] )
+
+        
         return {
             "bmi":            results["bmi"],
             "category":       results["category"],
@@ -30,6 +41,8 @@ async def calculate_bmi(data: BMIInput):
             "conditions":     results["conditions"],
             "message":        results["message"],
         }
+    
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
