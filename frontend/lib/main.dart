@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'services/firebase_options.dart';
 import 'services/calorie_provider_service.dart';
 import 'screens/login_page.dart';
 import 'screens/splash_screen.dart';
+import 'screens/onboarding.dart';
 import 'main_shell.dart';
 
 void main() async {
@@ -15,8 +15,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  //Removes the cache login data and every time starts with Login page (Only line 19)
-  await FirebaseAuth.instance.signOut();
+
+  // ── Removed forced signOut — splash screen handles routing ──
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -60,8 +60,9 @@ class NutriFlexApp extends StatelessWidget {
         ),
         home: const SplashScreen(),
         routes: {
-          '/auth': (context) => const LoginPage(),
-          '/home': (context) => const MainShell(),
+          '/auth':       (context) => const LoginPage(),
+          '/onboarding': (context) => const WelcomeScreen(),
+          '/home':       (context) => const MainShell(),
         },
       ),
     );

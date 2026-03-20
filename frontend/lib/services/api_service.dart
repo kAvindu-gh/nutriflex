@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 
 // ─── Base URL — change ONLY this one line when your IP changes ───────────────
 // Physical device : your machine's IPv4 (e.g. 192.168.8.132)
 // Emulator        : 10.0.2.2
-const String kBaseUrl = 'http://192.168.1.5:8000';
+const String kBaseUrl = 'http://192.168.1.3:8000';
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
@@ -95,10 +96,33 @@ class SearchedRecipe {
 // ─── API Service ──────────────────────────────────────────────────────────────
 
 class ApiService {
-  // All pages reference kBaseUrl — only update the const above
   static String get baseUrl => kBaseUrl;
 
-  // Trending recipes — home page
+  // ── Gets real Firebase uid — throws if not logged in ──
+  static String get _userId {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) throw Exception('No logged-in user found');
+    return uid;
+  }
+
+  // ── Onboarding — saves to users/{uid}/onboarding/data via backend ──
+  // The backend endpoint must use this path in Firestore
+  static Future<bool> updateOnboardingStep(Map<String, String> answer) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$kBaseUrl/onboarding/$_userId'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(answer),
+      ).timeout(const Duration(seconds: 10));
+      print('[NutriFlex] Onboarding step saved: ${response.statusCode} - ${response.body}');
+      return response.statusCode == 200;
+    } catch (e) {
+      print('[NutriFlex] Onboarding error: $e');
+      return false;
+    }
+  }
+
+  // ── Trending recipes — home page ──
   static Future<List<TrendingRecipe>> getTrendingRecipes({int limit = 50}) async {
     try {
       final uri = Uri.parse('$kBaseUrl/recipes/trending?limit=$limit');
@@ -114,11 +138,10 @@ class ApiService {
     }
   }
 
-  // Recipe search — home page
+  // ── Recipe search — home page ──
   static Future<SearchedRecipe> searchRecipe(String query) async {
     try {
-      final uri = Uri.parse(
-          '$kBaseUrl/recipes/search?query=${Uri.encodeComponent(query)}');
+      final uri = Uri.parse('$kBaseUrl/recipes/search?query=${Uri.encodeComponent(query)}');
       final response = await http.get(uri).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         return SearchedRecipe.fromJson(jsonDecode(response.body));
@@ -129,7 +152,7 @@ class ApiService {
     }
   }
 
-  // BMI calculation — bmi_screen.dart
+  // ── BMI calculation — bmi_screen.dart ──
   static Future<Map<String, dynamic>> calculateBmi(Map<String, dynamic> body) async {
     try {
       final response = await http.post(

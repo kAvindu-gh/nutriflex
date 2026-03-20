@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../main_shell.dart';
 import 'signup_page.dart';
@@ -10,8 +11,7 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
-    with TickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   final _formKey         = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -25,33 +25,26 @@ class _LoginPageState extends State<LoginPage>
   static const kBg    = Color(0xFF000302);
   static const kField = Color(0xFF111A13);
 
-  // ── Page entrance animation ───────────────────────────────────────────────
   late AnimationController _pageCtrl;
   late Animation<double>   _fadeAnim;
   late Animation<Offset>   _slideAnim;
 
-  // ── Logo rock animation ───────────────────────────────────────────────────
   late AnimationController _logoCtrl;
   late Animation<double>   _logoAnim;
 
-  // ── Toast overlay ─────────────────────────────────────────────────────────
   OverlayEntry? _toastEntry;
 
   @override
   void initState() {
     super.initState();
 
-    // Page entrance
-    _pageCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700));
+    _pageCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _fadeAnim  = CurvedAnimation(parent: _pageCtrl, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
         .animate(CurvedAnimation(parent: _pageCtrl, curve: Curves.easeOut));
     _pageCtrl.forward();
 
-    // Logo rock — _logoAnim must be assigned before repeat() is called
-    _logoCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 3000));
+    _logoCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000));
     _logoAnim = Tween<double>(begin: -0.06, end: 0.06)
         .animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.easeInOut));
     _logoCtrl.repeat(reverse: true);
@@ -67,16 +60,14 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  // ── Premium animated toast ────────────────────────────────────────────────
+  // ── Toast ─────────────────────────────────────────────────────────────────
   void _showToast(String msg, {bool isSuccess = false}) {
     _toastEntry?.remove();
     _toastEntry = null;
 
     final overlay = Overlay.of(context);
-    final ctrl    = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 350));
-    final slide   = Tween<Offset>(
-            begin: const Offset(0, 1), end: Offset.zero)
+    final ctrl    = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
+    final slide   = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
         .animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOutCubic));
     final fade = CurvedAnimation(parent: ctrl, curve: Curves.easeOut);
 
@@ -92,47 +83,33 @@ class _LoginPageState extends State<LoginPage>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
-                  color: isSuccess
-                      ? const Color(0xFF0D2818)
-                      : const Color(0xFF1A0A0A),
+                  color: isSuccess ? const Color(0xFF0D2818) : const Color(0xFF1A0A0A),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSuccess
-                        ? kGreen.withOpacity(0.6)
-                        : Colors.redAccent.withOpacity(0.6),
+                    color: isSuccess ? kGreen.withOpacity(0.6) : Colors.redAccent.withOpacity(0.6),
                     width: 1.2,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isSuccess ? kGreen : Colors.redAccent)
-                          .withOpacity(0.15),
-                      blurRadius: 20, spreadRadius: 2,
-                    ),
-                  ],
+                  boxShadow: [BoxShadow(
+                    color: (isSuccess ? kGreen : Colors.redAccent).withOpacity(0.15),
+                    blurRadius: 20, spreadRadius: 2,
+                  )],
                 ),
                 child: Row(children: [
                   Container(
                     width: 32, height: 32,
                     decoration: BoxDecoration(
-                      color: (isSuccess ? kGreen : Colors.redAccent)
-                          .withOpacity(0.15),
+                      color: (isSuccess ? kGreen : Colors.redAccent).withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       isSuccess ? Icons.check_circle_outline : Icons.error_outline,
-                      color: isSuccess ? kGreen : Colors.redAccent,
-                      size: 18,
+                      color: isSuccess ? kGreen : Colors.redAccent, size: 18,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(msg,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
-                        )),
-                  ),
+                  Expanded(child: Text(msg, style: const TextStyle(
+                    color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w500,
+                  ))),
                 ]),
               ),
             ),
@@ -153,6 +130,32 @@ class _LoginPageState extends State<LoginPage>
     });
   }
 
+  // ── Smart routing — checks onboarding status ──────────────────────────────
+  Future<void> _routeAfterLogin(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('onboarding')
+          .doc('data')
+          .get();
+
+      final onboardingDone = doc.exists &&
+          doc.data() != null &&
+          doc.data()!['commitment'] != null;
+
+      if (!mounted) return;
+
+      if (onboardingDone) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      }
+    } catch (_) {
+      if (mounted) Navigator.pushReplacementNamed(context, '/onboarding');
+    }
+  }
+
   // ── Email / password login ────────────────────────────────────────────────
   Future<void> _loginUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -169,7 +172,7 @@ class _LoginPageState extends State<LoginPage>
         _showToast('Please verify your email before logging in');
         return;
       }
-      _goToShell();
+      await _routeAfterLogin(user.uid);
     } on FirebaseAuthException catch (e) {
       _showToast(_authError(e.code));
     } finally {
@@ -191,8 +194,9 @@ class _LoginPageState extends State<LoginPage>
         accessToken: googleAuth.accessToken,
         idToken:     googleAuth.idToken,
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      _goToShell();
+      final cred = await FirebaseAuth.instance.signInWithCredential(credential);
+      final uid  = cred.user!.uid;
+      await _routeAfterLogin(uid);
     } on FirebaseAuthException catch (e) {
       _showToast('Firebase: ${e.code} — ${e.message}');
     } catch (e) {
@@ -217,41 +221,27 @@ class _LoginPageState extends State<LoginPage>
     }
   }
 
-  void _goToShell() {
-    if (!mounted) return;
-    Navigator.pushReplacement(context,
-        PageRouteBuilder(
-          pageBuilder:        (_, a, __) => const MainShell(),
-          transitionsBuilder: (_, a, __, child) =>
-              FadeTransition(opacity: a, child: child),
-          transitionDuration: const Duration(milliseconds: 500),
-        ));
-  }
-
   String _authError(String code) {
     switch (code) {
-      case 'user-not-found':          return 'No account found with this email';
-      case 'wrong-password':          return 'Incorrect password';
-      case 'invalid-email':           return 'Invalid email address';
-      case 'user-disabled':           return 'This account has been disabled';
-      case 'too-many-requests':       return 'Too many attempts. Try again later';
-      case 'network-request-failed':  return 'No internet connection';
-      default:                        return 'Login failed. Please try again';
+      case 'user-not-found':         return 'No account found with this email';
+      case 'wrong-password':         return 'Incorrect password';
+      case 'invalid-email':          return 'Invalid email address';
+      case 'user-disabled':          return 'This account has been disabled';
+      case 'too-many-requests':      return 'Too many attempts. Try again later';
+      case 'network-request-failed': return 'No internet connection';
+      default:                       return 'Login failed. Please try again';
     }
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBg,
       body: Stack(children: [
-        // Gradient background
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              begin: Alignment.topCenter, end: Alignment.bottomCenter,
               stops: [0.0, 0.6, 1.0],
               colors: [Color(0xFF0D2818), Color(0xFF103E23), kBg],
             ),
@@ -265,7 +255,6 @@ class _LoginPageState extends State<LoginPage>
               position: _slideAnim,
               child: Column(children: [
 
-                // ── Scrollable form ───────────────────────────────────────
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -274,48 +263,37 @@ class _LoginPageState extends State<LoginPage>
                       child: Column(children: [
                         const SizedBox(height: 56),
 
-                        // ── Rocking logo ──────────────────────────────────
+                        // Rocking logo
                         AnimatedBuilder(
                           animation: _logoAnim,
                           builder: (_, child) => Transform.rotate(
-                            angle: _logoAnim.value,
-                            child: child,
+                            angle: _logoAnim.value, child: child,
                           ),
                           child: Container(
-                            width: 150,
-                            height: 150,
+                            width: 150, height: 150,
                             decoration: BoxDecoration(
                               color: Colors.transparent,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: kGreen.withOpacity(0.4),
-                                width: 1.5,
-                              ),
+                              border: Border.all(color: kGreen.withOpacity(0.4), width: 1.5),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
-                              child: Image.asset(
-                                'lib/assets/NutriFlex_Logo_1.jpeg',
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset('lib/assets/NutriFlex_Logo_1.jpeg', fit: BoxFit.cover),
                             ),
                           ),
                         ),
                         const SizedBox(height: 24),
 
                         const Text('Welcome Back',
-                            style: TextStyle(color: Colors.white,
-                                fontSize: 26, fontWeight: FontWeight.bold)),
+                            style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
                         const Text('Sign in to continue your fitness journey',
                             style: TextStyle(color: Colors.grey, fontSize: 14)),
                         const SizedBox(height: 36),
 
-                        // Email field
                         _field(
                           controller: _emailController,
-                          hint: 'Email',
-                          icon: Icons.email_outlined,
+                          hint: 'Email', icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (v) {
                             if (v == null || v.isEmpty) return 'Email is required';
@@ -326,28 +304,22 @@ class _LoginPageState extends State<LoginPage>
                         ),
                         const SizedBox(height: 14),
 
-                        // Password field
                         _field(
                           controller: _passController,
-                          hint: 'Password',
-                          icon: Icons.lock_outline,
+                          hint: 'Password', icon: Icons.lock_outline,
                           obscure: _obscure,
                           suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscure ? Icons.visibility_off : Icons.visibility,
-                              color: Colors.grey, size: 20),
+                            icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.grey, size: 20),
                             onPressed: () => setState(() => _obscure = !_obscure),
                           ),
                           validator: (v) {
-                            if (v == null || v.isEmpty)
-                              return 'Password is required';
-                            if (v.length < 6)
-                              return 'Password must be at least 6 characters';
+                            if (v == null || v.isEmpty) return 'Password is required';
+                            if (v.length < 6) return 'Password must be at least 6 characters';
                             return null;
                           },
                         ),
 
-                        // Forgot password
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -358,7 +330,6 @@ class _LoginPageState extends State<LoginPage>
                         ),
                         const SizedBox(height: 6),
 
-                        // Sign in button
                         SizedBox(
                           width: double.infinity, height: 56,
                           child: ElevatedButton(
@@ -366,37 +337,29 @@ class _LoginPageState extends State<LoginPage>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kGreen,
                               disabledBackgroundColor: kGreen.withOpacity(0.4),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               elevation: 0,
                             ),
                             child: _loading
                                 ? const SizedBox(width: 22, height: 22,
-                                    child: CircularProgressIndicator(
-                                        color: Colors.black, strokeWidth: 2.5))
+                                    child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5))
                                 : const Text('Sign in',
                                     style: TextStyle(color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16)),
+                                        fontWeight: FontWeight.bold, fontSize: 16)),
                           ),
                         ),
                         const SizedBox(height: 28),
 
-                        // Divider
                         Row(children: [
-                          Expanded(child: Divider(
-                              color: Colors.white.withOpacity(0.12))),
+                          Expanded(child: Divider(color: Colors.white.withOpacity(0.12))),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 14),
-                            child: Text('or',
-                                style: TextStyle(color: Colors.grey, fontSize: 13)),
+                            child: Text('or', style: TextStyle(color: Colors.grey, fontSize: 13)),
                           ),
-                          Expanded(child: Divider(
-                              color: Colors.white.withOpacity(0.12))),
+                          Expanded(child: Divider(color: Colors.white.withOpacity(0.12))),
                         ]),
                         const SizedBox(height: 24),
 
-                        // Social buttons — two circles
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -404,15 +367,13 @@ class _LoginPageState extends State<LoginPage>
                               onTap: _googleLoading ? null : _googleSignIn,
                               child: _googleLoading
                                   ? const SizedBox(width: 20, height: 20,
-                                      child: CircularProgressIndicator(
-                                          color: kGreen, strokeWidth: 2))
+                                      child: CircularProgressIndicator(color: kGreen, strokeWidth: 2))
                                   : _GoogleColorIcon(),
                             ),
                             const SizedBox(width: 24),
                             _socialCircle(
                               onTap: () => _showToast('Apple sign-in coming soon'),
-                              child: const Icon(Icons.apple,
-                                  color: Colors.white, size: 26),
+                              child: const Icon(Icons.apple, color: Colors.white, size: 26),
                             ),
                           ],
                         ),
@@ -422,7 +383,6 @@ class _LoginPageState extends State<LoginPage>
                   ),
                 ),
 
-                // ── Fixed bottom ──────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: Row(
@@ -437,34 +397,21 @@ class _LoginPageState extends State<LoginPage>
                             pageBuilder: (_, a, __) => const SignUpPage(),
                             transitionsBuilder: (_, a, __, child) {
                               final slide = Tween<Offset>(
-                                begin: const Offset(1.0, 0),
-                                end: Offset.zero,
-                              ).animate(CurvedAnimation(
-                                  parent: a, curve: Curves.easeInOutCubic));
-                              final fade = Tween<double>(begin: 0.0, end: 1.0)
-                                  .animate(CurvedAnimation(
-                                      parent: a, curve: const Interval(0.0, 0.6)));
+                                begin: const Offset(1.0, 0), end: Offset.zero,
+                              ).animate(CurvedAnimation(parent: a, curve: Curves.easeInOutCubic));
+                              final fade  = Tween<double>(begin: 0.0, end: 1.0)
+                                  .animate(CurvedAnimation(parent: a, curve: const Interval(0.0, 0.6)));
                               final scale = Tween<double>(begin: 0.92, end: 1.0)
-                                  .animate(CurvedAnimation(
-                                      parent: a, curve: Curves.easeOutCubic));
-                              return FadeTransition(
-                                opacity: fade,
-                                child: ScaleTransition(
-                                  scale: scale,
-                                  child: SlideTransition(
-                                    position: slide,
-                                    child: child,
-                                  ),
-                                ),
-                              );
+                                  .animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic));
+                              return FadeTransition(opacity: fade,
+                                child: ScaleTransition(scale: scale,
+                                  child: SlideTransition(position: slide, child: child)));
                             },
-                            transitionDuration:
-                                const Duration(milliseconds: 500),
+                            transitionDuration: const Duration(milliseconds: 500),
                           ),
                         ),
                         child: const Text('Sign Up',
-                            style: TextStyle(color: kGreen,
-                                fontWeight: FontWeight.bold, fontSize: 14)),
+                            style: TextStyle(color: kGreen, fontWeight: FontWeight.bold, fontSize: 14)),
                       ),
                     ],
                   ),
@@ -477,26 +424,20 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  // ── Circle social button ──────────────────────────────────────────────────
   Widget _socialCircle({required Widget child, VoidCallback? onTap}) =>
       GestureDetector(
         onTap: onTap,
         child: Container(
           width: 60, height: 60,
           decoration: BoxDecoration(
-            color: kField,
-            shape: BoxShape.circle,
+            color: kField, shape: BoxShape.circle,
             border: Border.all(color: kGreen.withOpacity(0.25), width: 1.5),
-            boxShadow: [
-              BoxShadow(color: kGreen.withOpacity(0.08),
-                  blurRadius: 12, spreadRadius: 1),
-            ],
+            boxShadow: [BoxShadow(color: kGreen.withOpacity(0.08), blurRadius: 12, spreadRadius: 1)],
           ),
           child: Center(child: child),
         ),
       );
 
-  // ── Input field ───────────────────────────────────────────────────────────
   Widget _field({
     required TextEditingController controller,
     required String hint,
@@ -518,28 +459,16 @@ class _LoginPageState extends State<LoginPage>
           prefixIcon: Icon(icon, color: kGreen, size: 20),
           suffixIcon: suffixIcon,
           filled: true, fillColor: kField,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: kGreen.withOpacity(0.2))),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: kGreen, width: 1.5)),
-          errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Colors.redAccent, width: 1)),
-          focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Colors.redAccent, width: 1.5)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: kGreen.withOpacity(0.2))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: kGreen, width: 1.5)),
+          errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.redAccent, width: 1)),
+          focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.redAccent, width: 1.5)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       );
 }
 
-// ── Google color G icon ───────────────────────────────────────────────────────
 class _GoogleColorIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
@@ -555,22 +484,17 @@ class _GooglePainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
 
     paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        -1.57, 1.57, true, paint);
+    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r), -1.57, 1.57, true, paint);
     paint.color = const Color(0xFF34A853);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        0, 1.57, true, paint);
+    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r), 0, 1.57, true, paint);
     paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        1.57, 1.57, true, paint);
+    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r), 1.57, 1.57, true, paint);
     paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        3.14, 1.57, true, paint);
+    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r), 3.14, 1.57, true, paint);
     paint.color = const Color(0xFF111A13);
     canvas.drawCircle(Offset(cx, cy), r * 0.58, paint);
     paint.color = Colors.white;
-    canvas.drawRect(
-        Rect.fromLTWH(cx, cy - r * 0.18, r * 0.9, r * 0.36), paint);
+    canvas.drawRect(Rect.fromLTWH(cx, cy - r * 0.18, r * 0.9, r * 0.36), paint);
   }
 
   @override
