@@ -55,10 +55,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {},
-          )
+          IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () {}),
         ],
       ),
 
@@ -74,7 +71,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Steamed Rice",
                     calories: 180,
-                    imagePath: "assets/images/rice.jpg",
+                    imagePath: "lib/assets/rice.jpg", // ✅ FIXED
                     items: const [
                       FoodItem(name: "Basmati", calories: 180),
                       FoodItem(name: "Basmati", calories: 180),
@@ -87,7 +84,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Mallum (Greens)",
                     calories: 85,
-                    imagePath: "assets/images/mallum.jpg",
+                    imagePath: "lib/assets/mallum.jpg", // ✅ FIXED
                     items: const [
                       FoodItem(name: "Gotukola", calories: 85),
                       FoodItem(name: "Mukunuwenna", calories: 85),
@@ -107,7 +104,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Vegetable Curry 1",
                     calories: 120,
-                    imagePath: "assets/images/veg1.jpg",
+                    imagePath: "lib/assets/veg1.jpg", // ✅ FIXED
                     items: const [
                       FoodItem(name: "Carrots", calories: 120),
                       FoodItem(name: "Potato", calories: 120),
@@ -120,7 +117,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Vegetable Curry 2",
                     calories: 95,
-                    imagePath: "assets/images/veg2.jpg",
+                    imagePath: "lib/assets/veg2.jpg", // ✅ FIXED
                     items: const [
                       FoodItem(name: "Beans", calories: 95),
                       FoodItem(name: "Bell Pepper", calories: 95),
@@ -140,7 +137,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Meat",
                     calories: 250,
-                    imagePath: "assets/images/meat.jpg",
+                    imagePath: "lib/assets/meat.jpg", // ✅ FIXED
                     items: const [
                       FoodItem(name: "Chicken", calories: 250),
                       FoodItem(name: "Salmon", calories: 250),
@@ -153,7 +150,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Fresh Salad",
                     calories: 65,
-                    imagePath: "assets/images/salad.jpg",
+                    imagePath: "lib/assets/salad.jpg", // ✅ FIXED
                     items: const [
                       FoodItem(name: "Lettuce", calories: 65),
                       FoodItem(name: "Cucumber", calories: 65),
@@ -203,7 +200,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                       Text("0 cal"),
                       Text("2400 cal goal"),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -233,7 +230,6 @@ class _MealPrepPageState extends State<MealPrepPage> {
         ),
       ),
 
-      /// BOTTOM NAV BAR
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.greenAccent,
@@ -250,7 +246,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
   }
 }
 
-/// FOOD MODEL
+/// MODEL
 class FoodItem {
   final String name;
   final int calories;
@@ -258,7 +254,7 @@ class FoodItem {
   const FoodItem({required this.name, required this.calories});
 }
 
-/// MEAL CARD WITH IMAGE
+/// CARD
 class MealCard extends StatefulWidget {
   final String title;
   final int calories;
@@ -312,7 +308,7 @@ class _MealCardState extends State<MealCard> {
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
@@ -325,29 +321,30 @@ class _MealCardState extends State<MealCard> {
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            /// TITLE + CALORIES
+            /// TITLE ROW
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(widget.title,
+                Expanded(
+                  child: Text(
+                    widget.title,
                     style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold)),
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.green,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(
-                    "${widget.calories}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                )
+                  child: Text("${widget.calories}",
+                      style: const TextStyle(color: Colors.white)),
+                ),
               ],
             ),
 
@@ -357,30 +354,44 @@ class _MealCardState extends State<MealCard> {
             Column(
               children: List.generate(widget.items.length, (index) {
                 return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(widget.items[index].name,
-                        style: const TextStyle(color: Colors.white)),
+                    Expanded(
+                      child: Text(
+                        widget.items[index].name,
+                        style: const TextStyle(color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle,
-                              color: Colors.grey),
-                          onPressed: () => decrease(index),
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.remove_circle,
+                                color: Colors.grey, size: 18),
+                            onPressed: () => decrease(index),
+                          ),
                         ),
                         Text("${counts[index]}",
                             style: const TextStyle(color: Colors.white)),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle,
-                              color: Colors.greenAccent),
-                          onPressed: () => increase(index),
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.add_circle,
+                                color: Colors.greenAccent, size: 18),
+                            onPressed: () => increase(index),
+                          ),
                         ),
                       ],
                     )
                   ],
                 );
               }),
-            )
+            ),
           ],
         ),
       ),
