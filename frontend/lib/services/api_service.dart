@@ -32,13 +32,13 @@ class TrendingRecipe {
 
   factory TrendingRecipe.fromJson(Map<String, dynamic> json) {
     return TrendingRecipe(
-      id:          json['id']           ?? '',
-      name:        json['name']         ?? 'Unknown',
-      calories:   (json['calories']     ?? 0).toDouble(),
-      proteinG:   (json['protein_g']    ?? 0).toDouble(),
-      fatG:       (json['fat_g']        ?? 0).toDouble(),
-      carbsG:     (json['carbs_g']      ?? 0).toDouble(),
-      imageUrl:    json['image_url'],
+      id: json['id'] ?? '',
+      name: json['name'] ?? 'Unknown',
+      calories: (json['calories'] ?? 0).toDouble(),
+      proteinG: (json['protein_g'] ?? 0).toDouble(),
+      fatG: (json['fat_g'] ?? 0).toDouble(),
+      carbsG: (json['carbs_g'] ?? 0).toDouble(),
+      imageUrl: json['image_url'],
       searchCount: json['search_count'] ?? 0,
     );
   }
@@ -61,11 +61,11 @@ class SearchedRecipe {
 
   factory SearchedRecipe.fromJson(Map<String, dynamic> json) {
     return SearchedRecipe(
-      name:            json['name']               ?? '',
-      ingredients:     List<String>.from(json['ingredients']  ?? []),
-      instructions:    List<String>.from(json['instructions'] ?? []),
-      nutrition:       json['nutrition']           ?? {},
-      savedToFirebase: json['saved_to_firebase']   ?? false,
+      name: json['name'] ?? '',
+      ingredients: List<String>.from(json['ingredients'] ?? []),
+      instructions: List<String>.from(json['instructions'] ?? []),
+      nutrition: json['nutrition'] ?? {},
+      savedToFirebase: json['saved_to_firebase'] ?? false,
     );
   }
 
@@ -109,12 +109,16 @@ class ApiService {
   // The backend endpoint must use this path in Firestore
   static Future<bool> updateOnboardingStep(Map<String, String> answer) async {
     try {
-      final response = await http.post(
-        Uri.parse('$kBaseUrl/onboarding/$_userId'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(answer),
-      ).timeout(const Duration(seconds: 10));
-      print('[NutriFlex] Onboarding step saved: ${response.statusCode} - ${response.body}');
+      final response = await http
+          .post(
+            Uri.parse('$kBaseUrl/onboarding/$_userId'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(answer),
+          )
+          .timeout(const Duration(seconds: 10));
+      print(
+        '[NutriFlex] Onboarding step saved: ${response.statusCode} - ${response.body}',
+      );
       return response.statusCode == 200;
     } catch (e) {
       print('[NutriFlex] Onboarding error: $e');
@@ -123,7 +127,9 @@ class ApiService {
   }
 
   // ── Trending recipes — home page ──
-  static Future<List<TrendingRecipe>> getTrendingRecipes({int limit = 50}) async {
+  static Future<List<TrendingRecipe>> getTrendingRecipes({
+    int limit = 50,
+  }) async {
     try {
       final uri = Uri.parse('$kBaseUrl/recipes/trending?limit=$limit');
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -141,7 +147,9 @@ class ApiService {
   // ── Recipe search — home page ──
   static Future<SearchedRecipe> searchRecipe(String query) async {
     try {
-      final uri = Uri.parse('$kBaseUrl/recipes/search?query=${Uri.encodeComponent(query)}');
+      final uri = Uri.parse(
+        '$kBaseUrl/recipes/search?query=${Uri.encodeComponent(query)}',
+      );
       final response = await http.get(uri).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         return SearchedRecipe.fromJson(jsonDecode(response.body));
@@ -153,13 +161,19 @@ class ApiService {
   }
 
   // ── BMI calculation — bmi_screen.dart ──
-  static Future<Map<String, dynamic>> calculateBmi(Map<String, dynamic> body) async {
+  static Future<Map<String, dynamic>> calculateBmi(
+    Map<String, dynamic> body,
+  ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$kBaseUrl/bmi/calculate'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 15));
+      final user = FirebaseAuth.instance.currentUser;
+
+      final response = await http
+          .post(
+            Uri.parse('$kBaseUrl/bmi/calculate?user_id=${user?.uid}'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }

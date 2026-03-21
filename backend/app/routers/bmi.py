@@ -9,7 +9,7 @@ router = APIRouter(prefix="/bmi", tags=["BMI Calculator"])
 
 
 @router.post("/calculate", response_model=BMIResponse)
-async def calculate_bmi(data: BMIInput, document_id: str):
+async def calculate_bmi(user_id: str, data: BMIInput):
 
     
     try:
@@ -23,8 +23,8 @@ async def calculate_bmi(data: BMIInput, document_id: str):
             medical_conditions=data.medical_conditions or [],
         )
         # Passing the data to the add_physical_measurements function in nutrients.py
-        nutrients.add_physical_measurements(document_id, data.weight_kg, data.height_cm, data.age, data.gender, data.activity_level, data.goal, results["bmi"],results["tdee"], results["category"] )
-        nutrients.add_requirements(document_id, results["daily_calories"], results["protein_g"], results["carbs_g"], results["fat_g"] )
+        nutrients.add_physical_measurements(user_id, data.weight_kg, data.height_cm, data.age, data.gender, data.activity_level, data.goal, results["bmi"],results["tdee"], results["category"] )
+        nutrients.add_requirements(user_id, results["daily_calories"], results["protein_g"], results["carbs_g"], results["fat_g"] )
 
         
         return {
