@@ -47,6 +47,7 @@ class NutriFlexApp extends StatelessWidget {
         theme: ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: const Color(0xFF000302),
+          fontFamily: 'Roboto',
           colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.green,
             brightness: Brightness.dark,
@@ -58,9 +59,9 @@ class NutriFlexApp extends StatelessWidget {
         ),
         home: const SplashScreen(),
         routes: {
-          '/auth':       (context) => const LoginPage(),
-          '/onboarding': (context) => const WelcomeScreen(),
-          '/home':       (context) => const MainShell(),
+          '/auth':        (context) => const LoginPage(),
+          '/onboarding':  (context) => const WelcomeScreen(),
+          '/home':        (context) => const MainShell(),
         },
       ),
     );

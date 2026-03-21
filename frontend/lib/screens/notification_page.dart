@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
+import 'userProfile.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Colour palette
@@ -367,16 +368,23 @@ class _NotificationsPageState extends State<NotificationsPage>
     _saveToPrefs();
   }
 
-  void _openProfile(BuildContext context) {
-    // TODO: Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage()));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Open Profile'),
-        backgroundColor: Color(0xFF1A3A22),
-        duration: Duration(seconds: 1),
+ void _openProfile(BuildContext context) {
+  Navigator.push(
+    context,
+    PageRouteBuilder(
+      pageBuilder: (_, a, __) => const ProfileScreen(),
+      transitionsBuilder: (_, a, __, child) => SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(1.0, 0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+            parent: a, curve: Curves.easeInOutCubic)),
+        child: child,
       ),
-    );
-  }
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+  );
+}
 
   int get _unreadCount => _notifications.where((n) => !n.isRead).length;
 

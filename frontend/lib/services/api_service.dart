@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
 // ─── Base URL — change ONLY this one line when your IP changes ───────────────
 // Physical device : your machine's IPv4 (e.g. 192.168.8.132)
 // Emulator        : 10.0.2.2
-const String kBaseUrl = 'http://192.168.1.3:8000';
+const String kBaseUrl = 'http://192.168.8.132:8000';
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
@@ -105,8 +106,10 @@ class ApiService {
     return uid;
   }
 
-  // ── Onboarding — saves to users/{uid}/onboarding/data via backend ──
-  // The backend endpoint must use this path in Firestore
+  // ─────────────────────────────────────────────────────────────────────────
+  // ONBOARDING
+  // ─────────────────────────────────────────────────────────────────────────
+
   static Future<bool> updateOnboardingStep(Map<String, String> answer) async {
     try {
       final response = await http
@@ -116,9 +119,7 @@ class ApiService {
             body: jsonEncode(answer),
           )
           .timeout(const Duration(seconds: 10));
-      print(
-        '[NutriFlex] Onboarding step saved: ${response.statusCode} - ${response.body}',
-      );
+      print('[NutriFlex] Onboarding step saved: ${response.statusCode} - ${response.body}');
       return response.statusCode == 200;
     } catch (e) {
       print('[NutriFlex] Onboarding error: $e');
@@ -126,10 +127,11 @@ class ApiService {
     }
   }
 
-  // ── Trending recipes — home page ──
-  static Future<List<TrendingRecipe>> getTrendingRecipes({
-    int limit = 50,
-  }) async {
+  // ─────────────────────────────────────────────────────────────────────────
+  // RECIPES
+  // ─────────────────────────────────────────────────────────────────────────
+
+  static Future<List<TrendingRecipe>> getTrendingRecipes({int limit = 50}) async {
     try {
       final uri = Uri.parse('$kBaseUrl/recipes/trending?limit=$limit');
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -144,7 +146,6 @@ class ApiService {
     }
   }
 
-  // ── Recipe search — home page ──
   static Future<SearchedRecipe> searchRecipe(String query) async {
     try {
       final uri = Uri.parse(
@@ -160,13 +161,13 @@ class ApiService {
     }
   }
 
-  // ── BMI calculation — bmi_screen.dart ──
-  static Future<Map<String, dynamic>> calculateBmi(
-    Map<String, dynamic> body,
-  ) async {
+  // ─────────────────────────────────────────────────────────────────────────
+  // BMI
+  // ─────────────────────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> calculateBmi(Map<String, dynamic> body) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-
       final response = await http
           .post(
             Uri.parse('$kBaseUrl/bmi/calculate?user_id=${user?.uid}'),
@@ -182,5 +183,73 @@ class ApiService {
     } catch (e) {
       throw Exception('$e');
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PROFILE
+  // ─────────────────────────────────────────────────────────────────────────
+
+  static const String _profileBase = '$kBaseUrl/api/v1';
+
+  // GET profile
+  static Future<Map<String, dynamic>> getProfile(String userId) async {
+    final response = await http.get(
+      Uri.parse('$_profileBase/profile/$userId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final error = jsonDecode(response.body);
+    throw Exception(error['detail'] ?? 'Failed to load profile');
+  }
+
+  // PATCH profile — update any field
+  static Future<Map<String, dynamic>> updateProfile(
+      String userId, Map<String, dynamic> fields) async {
+    final response = await http.patch(
+      Uri.parse('$_profileBase/profile/$userId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(fields),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final error = jsonDecode(response.body);
+    throw Exception(error['detail'] ?? 'Failed to update profile');
+  }
+
+  // DELETE a field — set to null
+  static Future<Map<String, dynamic>> deleteField(
+      String userId, String field) async {
+    final response = await http.delete(
+      Uri.parse('$_profileBase/profile/$userId/field'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'field': field}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final error = jsonDecode(response.body);
+    throw Exception(error['detail'] ?? 'Failed to delete field');
+  }
+
+  // POST upload profile picture
+  static Future<Map<String, dynamic>> uploadProfilePicture(
+      String userId, File imageFile) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_profileBase/profile/$userId/upload-picture'),
+    );
+    request.files.add(
+      await http.MultipartFile.fromPath('file', imageFile.path),
+    );
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final error = jsonDecode(response.body);
+    throw Exception(error['detail'] ?? 'Failed to upload picture');
   }
 }

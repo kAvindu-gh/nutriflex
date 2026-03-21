@@ -5,7 +5,7 @@ import 'screens/bmi_screen.dart';
 import 'screens/notification_page.dart';
 import 'widgets/bottom_nav.dart';
 
-// ── Placeholder screens for tabs not yet built ───────────────────────────────
+// ── Placeholder screen ────────────────────────────────────────────────────────
 class _PlaceholderScreen extends StatelessWidget {
   final String name;
   final IconData icon;
@@ -43,7 +43,7 @@ class _PlaceholderScreen extends StatelessWidget {
   }
 }
 
-// ── BMI shell — wraps BMIScreen in a Scaffold + gradient ─────────────────────
+// ── BMI shell ─────────────────────────────────────────────────────────────────
 class _BmiShell extends StatelessWidget {
   const _BmiShell();
 
@@ -84,7 +84,7 @@ class _MainShellState extends State<MainShell> {
     HomePage(),
     _PlaceholderScreen(name: 'Meal Prep', icon: Icons.restaurant_menu),
     _BmiShell(),
-    NotificationsPage(),  // ← from notification branch
+    NotificationsPage(), // ← profile button is inside NotificationsPage header
   ];
 
   @override
