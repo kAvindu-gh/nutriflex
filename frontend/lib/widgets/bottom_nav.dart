@@ -1,11 +1,8 @@
-//bottom_nav.dart
-
+// lib/bottom_nav.dart
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// ── Tab data ─────────────────────────────────────────────────────────────────
 
 class _NavTab {
   final IconData icon;
@@ -15,13 +12,11 @@ class _NavTab {
 }
 
 const _tabs = [
-  _NavTab(icon: Icons.home_outlined,       activeIcon: Icons.home,          label: 'Home'),
-  _NavTab(icon: Icons.restaurant_menu,     activeIcon: Icons.restaurant_menu,    label: 'Meal Prep'),
-  _NavTab(icon: Icons.calculate_outlined,  activeIcon: Icons.calculate,     label: 'BMI'),
-  _NavTab(icon: Icons.notifications_none,  activeIcon: Icons.notifications, label: 'Alerts'),
+  _NavTab(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
+  _NavTab(icon: Icons.restaurant_menu, activeIcon: Icons.restaurant_menu, label: 'Meal Prep'),
+  _NavTab(icon: Icons.calculate_outlined, activeIcon: Icons.calculate, label: 'BMI'),
+  _NavTab(icon: Icons.notifications_none, activeIcon: Icons.notifications, label: 'Alerts'),
 ];
-
-// ── Particle model ────────────────────────────────────────────────────────────
 
 class _Particle {
   late Offset position;
@@ -50,8 +45,6 @@ class _Particle {
   bool get isDead => opacity < 0.02 || radius < 0.3;
 }
 
-// ── Particle painter ──────────────────────────────────────────────────────────
-
 class _ParticlePainter extends CustomPainter {
   final List<_Particle> particles;
   _ParticlePainter(this.particles);
@@ -70,7 +63,6 @@ class _ParticlePainter extends CustomPainter {
   bool shouldRepaint(_ParticlePainter old) => true;
 }
 
-// ── Main widget ───────────────────────────────────────────────────────────────
 class AppBottomNav extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -85,19 +77,12 @@ class AppBottomNav extends StatefulWidget {
   State<AppBottomNav> createState() => _AppBottomNavState();
 }
 
-class _AppBottomNavState extends State<AppBottomNav>
-    with TickerProviderStateMixin {
-
-  // Bubble press animation per tab
+class _AppBottomNavState extends State<AppBottomNav> with TickerProviderStateMixin {
   late final List<AnimationController> _bubbleCtrls;
   late final List<Animation<double>> _bubbleAnims;
-
-  // Particle system
   final List<_Particle> _particles = [];
   final math.Random _rng = math.Random();
   late final AnimationController _particleCtrl;
-
-  // Sliding indicator
   late final AnimationController _slideCtrl;
   late Animation<double> _slideAnim;
   int _prevIndex = 0;
@@ -107,37 +92,28 @@ class _AppBottomNavState extends State<AppBottomNav>
     super.initState();
     _prevIndex = widget.currentIndex;
 
-    // One bubble controller per tab
     _bubbleCtrls = List.generate(
       _tabs.length,
-      (_) => AnimationController(
-          vsync: this, duration: const Duration(milliseconds: 300)),
+      (_) => AnimationController(vsync: this, duration: const Duration(milliseconds: 300)),
     );
+
     _bubbleAnims = _bubbleCtrls
-        .map((c) => TweenSequence([
+        .map((c) => TweenSequence<double>([
               TweenSequenceItem(
-                  tween: Tween(begin: 1.0, end: 1.35)
-                      .chain(CurveTween(curve: Curves.easeOut)),
+                  tween: Tween(begin: 1.0, end: 1.35).chain(CurveTween(curve: Curves.easeOut)),
                   weight: 40),
               TweenSequenceItem(
-                  tween: Tween(begin: 1.35, end: 1.0)
-                      .chain(CurveTween(curve: Curves.elasticOut)),
+                  tween: Tween(begin: 1.35, end: 1.0).chain(CurveTween(curve: Curves.elasticOut)),
                   weight: 60),
             ]).animate(c))
         .toList();
 
-    // Particle ticker
-    _particleCtrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 60))
+    _particleCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 60))
       ..addListener(_tickParticles)
       ..repeat();
 
-    // Slide indicator
-    _slideCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 400));
-    _slideAnim = Tween<double>(
-            begin: widget.currentIndex.toDouble(),
-            end: widget.currentIndex.toDouble())
+    _slideCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _slideAnim = Tween<double>(begin: widget.currentIndex.toDouble(), end: widget.currentIndex.toDouble())
         .animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutBack));
   }
 
@@ -145,11 +121,8 @@ class _AppBottomNavState extends State<AppBottomNav>
   void didUpdateWidget(AppBottomNav old) {
     super.didUpdateWidget(old);
     if (old.currentIndex != widget.currentIndex) {
-      _slideAnim = Tween<double>(
-              begin: _prevIndex.toDouble(),
-              end: widget.currentIndex.toDouble())
-          .animate(
-              CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutBack));
+      _slideAnim = Tween<double>(begin: _prevIndex.toDouble(), end: widget.currentIndex.toDouble())
+          .animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutBack));
       _slideCtrl.forward(from: 0);
       _prevIndex = widget.currentIndex;
     }
@@ -167,11 +140,8 @@ class _AppBottomNavState extends State<AppBottomNav>
 
   void _handleTap(int index, Offset globalPos) {
     HapticFeedback.lightImpact();
-
-    // Bubble pop
     _bubbleCtrls[index].forward(from: 0);
 
-    // Spawn particles at tap location
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     if (box != null) {
       final local = box.globalToLocal(globalPos);
@@ -179,7 +149,6 @@ class _AppBottomNavState extends State<AppBottomNav>
         _particles.add(_Particle(local, _rng));
       }
     }
-
     widget.onTap(index);
   }
 
@@ -206,37 +175,24 @@ class _AppBottomNavState extends State<AppBottomNav>
             decoration: BoxDecoration(
               color: const Color(0xFF0A1F12).withOpacity(0.08),
               borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: Colors.green.withOpacity(0.18),
-                width: 1.2,
-              ),
+              border: Border.all(color: Colors.green.withOpacity(0.18), width: 1.2),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
+                BoxShadow(color: Colors.green.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, -2)),
               ],
             ),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // Particle layer
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(32),
-                    child: CustomPaint(
-                      painter: _ParticlePainter(List.from(_particles)),
-                    ),
+                    child: CustomPaint(painter: _ParticlePainter(List.from(_particles))),
                   ),
                 ),
-
-                // Tab buttons
                 Row(
                   children: List.generate(_tabs.length, (i) {
                     final tab = _tabs[i];
                     final isSelected = widget.currentIndex == i;
-
                     return Expanded(
                       child: GestureDetector(
                         behavior: HitTestBehavior.translucent,
@@ -244,77 +200,47 @@ class _AppBottomNavState extends State<AppBottomNav>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Icon bubble
                             AnimatedBuilder(
                               animation: _bubbleAnims[i],
-                              builder: (_, child) => Transform.scale(
-                                scale: _bubbleAnims[i].value,
-                                child: child,
-                              ),
+                              builder: (_, child) => Transform.scale(scale: _bubbleAnims[i].value, child: child),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 300),
                                 curve: Curves.easeOut,
                                 width: isSelected ? 52 : 40,
                                 height: isSelected ? 38 : 30,
                                 decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Colors.green.withOpacity(0.18)
-                                      : Colors.transparent,
+                                  color: isSelected ? Colors.green.withOpacity(0.18) : Colors.transparent,
                                   borderRadius: BorderRadius.circular(14),
-                                  border: isSelected
-                                      ? Border.all(
-                                          color: Colors.green.withOpacity(0.35),
-                                          width: 1)
-                                      : null,
+                                  border: isSelected ? Border.all(color: Colors.green.withOpacity(0.35), width: 1) : null,
                                   boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: Colors.green.withOpacity(0.2),
-                                            blurRadius: 10,
-                                            spreadRadius: 1,
-                                          )
-                                        ]
+                                      ? [BoxShadow(color: Colors.green.withOpacity(0.2), blurRadius: 10, spreadRadius: 1)]
                                       : [],
                                 ),
                                 child: Center(
                                   child: AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 250),
-                                    transitionBuilder: (child, anim) =>
-                                        ScaleTransition(
-                                            scale: anim, child: child),
+                                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
                                     child: Icon(
                                       isSelected ? tab.activeIcon : tab.icon,
                                       key: ValueKey(isSelected),
-                                      color: isSelected
-                                          ? Colors.green
-                                          : Colors.grey.shade500,
+                                      color: isSelected ? Colors.green : Colors.grey.shade500,
                                       size: isSelected ? 22 : 20,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 2),
-
-                            // Label
                             AnimatedDefaultTextStyle(
                               duration: const Duration(milliseconds: 250),
                               style: TextStyle(
-                                color: isSelected
-                                    ? Colors.green
-                                    : Colors.grey.shade500,
+                                color: isSelected ? Colors.green : Colors.grey.shade500,
                                 fontSize: isSelected ? 10 : 9,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                               ),
                               child: Text(tab.label),
                             ),
-
                             const SizedBox(height: 2),
-
-                            // Green dot — only visible on selected tab
                             AnimatedOpacity(
                               opacity: isSelected ? 1.0 : 0.0,
                               duration: const Duration(milliseconds: 300),
@@ -324,13 +250,7 @@ class _AppBottomNavState extends State<AppBottomNav>
                                 decoration: BoxDecoration(
                                   color: Colors.green,
                                   shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.green.withOpacity(0.7),
-                                      blurRadius: 6,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
+                                  boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.7), blurRadius: 6, spreadRadius: 1)],
                                 ),
                               ),
                             ),

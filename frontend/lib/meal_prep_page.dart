@@ -1,4 +1,6 @@
+// lib/meal_prep_page.dart
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/bottom_nav.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,10 +16,6 @@ class MyApp extends StatelessWidget {
       title: 'Meal Prep Builder',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.black,
-          elevation: 0,
-        ),
       ),
       home: const MealPrepPage(),
     );
@@ -45,17 +43,21 @@ class _MealPrepPageState extends State<MealPrepPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
+        title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text("Meal Prep Builder",
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            Text("Create your perfect Sri Lankan Meal plate",
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
+          children: [
+            Text("Meal Prep Builder"),
+            Text(
+              "Create your perfect Sri Lankan Meal plate",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {},
+          ),
         ],
       ),
 
@@ -63,7 +65,6 @@ class _MealPrepPageState extends State<MealPrepPage> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-
             /// ROW 1
             Row(
               children: [
@@ -71,10 +72,10 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Steamed Rice",
                     calories: 180,
-                    imagePath: "lib/assets/rice.jpg", // ✅ FIXED
+                    imagePath: "lib/assets/rice.jpg",
                     items: const [
                       FoodItem(name: "Basmati", calories: 180),
-                      FoodItem(name: "Basmati", calories: 180),
+                      FoodItem(name: "Red Rice", calories: 170),
                     ],
                     onChanged: updateCalories,
                   ),
@@ -84,10 +85,10 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Mallum (Greens)",
                     calories: 85,
-                    imagePath: "lib/assets/mallum.jpg", // ✅ FIXED
+                    imagePath: "lib/assets/mallum.jpg",
                     items: const [
                       FoodItem(name: "Gotukola", calories: 85),
-                      FoodItem(name: "Mukunuwenna", calories: 85),
+                      FoodItem(name: "Mukunuwenna", calories: 90),
                     ],
                     onChanged: updateCalories,
                   ),
@@ -104,10 +105,10 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Vegetable Curry 1",
                     calories: 120,
-                    imagePath: "lib/assets/veg1.jpg", // ✅ FIXED
+                    imagePath: "lib/assets/veg1.jpg",
                     items: const [
                       FoodItem(name: "Carrots", calories: 120),
-                      FoodItem(name: "Potato", calories: 120),
+                      FoodItem(name: "Potato", calories: 130),
                     ],
                     onChanged: updateCalories,
                   ),
@@ -117,10 +118,10 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Vegetable Curry 2",
                     calories: 95,
-                    imagePath: "lib/assets/veg2.jpg", // ✅ FIXED
+                    imagePath: "lib/assets/veg2.jpg",
                     items: const [
                       FoodItem(name: "Beans", calories: 95),
-                      FoodItem(name: "Bell Pepper", calories: 95),
+                      FoodItem(name: "Bell Pepper", calories: 100),
                     ],
                     onChanged: updateCalories,
                   ),
@@ -137,10 +138,10 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Meat",
                     calories: 250,
-                    imagePath: "lib/assets/meat.jpg", // ✅ FIXED
+                    imagePath: "lib/assets/meat.jpg",
                     items: const [
                       FoodItem(name: "Chicken", calories: 250),
-                      FoodItem(name: "Salmon", calories: 250),
+                      FoodItem(name: "Fish", calories: 220),
                     ],
                     onChanged: updateCalories,
                   ),
@@ -150,10 +151,10 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   child: MealCard(
                     title: "Fresh Salad",
                     calories: 65,
-                    imagePath: "lib/assets/salad.jpg", // ✅ FIXED
+                    imagePath: "lib/assets/salad.jpg",
                     items: const [
                       FoodItem(name: "Lettuce", calories: 65),
-                      FoodItem(name: "Cucumber", calories: 65),
+                      FoodItem(name: "Cucumber", calories: 50),
                     ],
                     onChanged: updateCalories,
                   ),
@@ -175,8 +176,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Total Meal Calories",
-                          style: TextStyle(fontSize: 18)),
+                      const Text("Total Meal Calories"),
                       Text(
                         "$totalCalories cal",
                         style: const TextStyle(
@@ -190,16 +190,8 @@ class _MealPrepPageState extends State<MealPrepPage> {
                   const SizedBox(height: 10),
                   LinearProgressIndicator(
                     value: totalCalories / 2400,
-                    backgroundColor: Colors.grey,
                     color: Colors.greenAccent,
-                  ),
-                  const SizedBox(height: 6),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("0 cal"),
-                      Text("2400 cal goal"),
-                    ],
+                    backgroundColor: Colors.grey,
                   ),
                 ],
               ),
@@ -214,14 +206,11 @@ class _MealPrepPageState extends State<MealPrepPage> {
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.greenAccent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
                 ),
                 icon: const Icon(Icons.save, color: Colors.black),
                 label: const Text(
                   "Save my recipe",
-                  style: TextStyle(color: Colors.black, fontSize: 18),
+                  style: TextStyle(color: Colors.black),
                 ),
                 onPressed: () {},
               ),
@@ -230,17 +219,13 @@ class _MealPrepPageState extends State<MealPrepPage> {
         ),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.greenAccent,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 1,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.restaurant), label: "Meal Prep"),
-          BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: "BMI"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Alerts"),
-        ],
+      // ── FANCY ANIMATED BOTTOM NAV ──
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: 1, // 1 = Meal Prep tab
+        onTap: (index) {
+          print('Tab tapped: $index');
+          // TODO: Add real navigation later
+        },
       ),
     );
   }
@@ -250,11 +235,10 @@ class _MealPrepPageState extends State<MealPrepPage> {
 class FoodItem {
   final String name;
   final int calories;
-
   const FoodItem({required this.name, required this.calories});
 }
 
-/// CARD
+/// FINAL MEAL CARD
 class MealCard extends StatefulWidget {
   final String title;
   final int calories;
@@ -276,124 +260,118 @@ class MealCard extends StatefulWidget {
 }
 
 class _MealCardState extends State<MealCard> {
-  late List<int> counts;
+  int count = 0;
+  FoodItem? selectedItem;
+  final TextEditingController weightController = TextEditingController(text: "100");
+
+  int getWeight() => int.tryParse(weightController.text) ?? 100;
+
+  int calculateCalories() {
+    if (selectedItem == null) return 0;
+    return ((selectedItem!.calories * getWeight()) / 100).round();
+  }
+
+  void increase() {
+    if (selectedItem == null) return;
+    widget.onChanged(calculateCalories());
+    setState(() => count++);
+  }
+
+  void decrease() {
+    if (count > 0 && selectedItem != null) {
+      widget.onChanged(-calculateCalories());
+      setState(() => count--);
+    }
+  }
 
   @override
-  void initState() {
-    super.initState();
-    counts = List.generate(widget.items.length, (_) => 0);
-  }
-
-  void increase(int index) {
-    setState(() => counts[index]++);
-    widget.onChanged(widget.items[index].calories);
-  }
-
-  void decrease(int index) {
-    if (counts[index] > 0) {
-      setState(() => counts[index]--);
-      widget.onChanged(-widget.items[index].calories);
-    }
+  void dispose() {
+    weightController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 190,
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        image: DecorationImage(
-          image: AssetImage(widget.imagePath),
-          fit: BoxFit.cover,
-        ),
+        color: Colors.grey[900],
       ),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [
-              Colors.black.withOpacity(0.7),
-              Colors.black.withOpacity(0.2),
-            ],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            child: Image.asset(
+              widget.imagePath,
+              height: 110,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-
-            /// TITLE ROW
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
               children: [
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text(widget.title)),
+                    Text("${widget.calories}"),
+                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text("${widget.calories}",
-                      style: const TextStyle(color: Colors.white)),
+                DropdownButton<FoodItem>(
+                  value: selectedItem,
+                  hint: const Text("Select option"),
+                  isExpanded: true,
+                  items: widget.items.map((item) {
+                    return DropdownMenuItem(
+                      value: item,
+                      child: Text(item.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedItem = value;
+                      count = 0;
+                    });
+                  },
+                ),
+                Row(
+                  children: [
+                    const Text("Weight:"),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: TextField(
+                        controller: weightController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          hintText: "grams",
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const Text("g"),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle),
+                      onPressed: decrease,
+                    ),
+                    Text("$count"),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle, color: Colors.greenAccent),
+                      onPressed: increase,
+                    ),
+                  ],
                 ),
               ],
             ),
-
-            const Spacer(),
-
-            /// ITEMS
-            Column(
-              children: List.generate(widget.items.length, (index) {
-                return Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.items[index].name,
-                        style: const TextStyle(color: Colors.white),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.remove_circle,
-                                color: Colors.grey, size: 18),
-                            onPressed: () => decrease(index),
-                          ),
-                        ),
-                        Text("${counts[index]}",
-                            style: const TextStyle(color: Colors.white)),
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.add_circle,
-                                color: Colors.greenAccent, size: 18),
-                            onPressed: () => increase(index),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                );
-              }),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
