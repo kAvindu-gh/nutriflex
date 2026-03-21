@@ -120,6 +120,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                     items: const [
                       FoodItem(name: "Basmati", calories: 180, protein: 3, carbs: 39, fat: 0),
                       FoodItem(name: "Red Rice", calories: 170, protein: 4, carbs: 36, fat: 1),
+                      FoodItem(name: "Samba", calories: 165, protein: 3, carbs: 36, fat: 1),
                     ],
                     onChanged: updateMacros,
                     imagePath: "lib/assets/rice.jpg",
@@ -132,6 +133,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                     items: const [
                       FoodItem(name: "Gotukola", calories: 85, protein: 3, carbs: 8, fat: 3),
                       FoodItem(name: "Mukunuwenna", calories: 90, protein: 4, carbs: 10, fat: 2),
+                      FoodItem(name: "Kankun", calories: 80, protein: 4, carbs: 6, fat: 2),
                     ],
                     onChanged: updateMacros,
                     imagePath: "lib/assets/mallum.jpg",
@@ -151,6 +153,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                     items: const [
                       FoodItem(name: "Carrots", calories: 120, protein: 2, carbs: 25, fat: 4),
                       FoodItem(name: "Potato", calories: 130, protein: 3, carbs: 28, fat: 2),
+                      FoodItem(name: "Pumpkin", calories: 115, protein: 2, carbs: 24, fat: 3),
                     ],
                     onChanged: updateMacros,
                     imagePath: "lib/assets/veg1.jpg",
@@ -163,6 +166,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                     items: const [
                       FoodItem(name: "Beans", calories: 95, protein: 4, carbs: 16, fat: 2),
                       FoodItem(name: "Bell Pepper", calories: 100, protein: 1, carbs: 20, fat: 1),
+                      FoodItem(name: "Brinjal", calories: 105, protein: 2, carbs: 18, fat: 4),
                     ],
                     onChanged: updateMacros,
                     imagePath: "lib/assets/veg2.jpg",
@@ -182,6 +186,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                     items: const [
                       FoodItem(name: "Chicken", calories: 250, protein: 25, carbs: 0, fat: 15),
                       FoodItem(name: "Fish", calories: 220, protein: 22, carbs: 0, fat: 12),
+                      FoodItem(name: "Prawns", calories: 230, protein: 24, carbs: 0, fat: 14),
                     ],
                     onChanged: updateMacros,
                     imagePath: "lib/assets/meat.jpg",
@@ -194,6 +199,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
                     items: const [
                       FoodItem(name: "Lettuce", calories: 65, protein: 1, carbs: 3, fat: 0),
                       FoodItem(name: "Cucumber", calories: 50, protein: 1, carbs: 11, fat: 0),
+                      FoodItem(name: "Tomato", calories: 45, protein: 1, carbs: 9, fat: 0),
                     ],
                     onChanged: updateMacros,
                     imagePath: "lib/assets/salad.jpg",
