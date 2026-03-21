@@ -31,12 +31,61 @@ class MealPrepPage extends StatefulWidget {
 
 class _MealPrepPageState extends State<MealPrepPage> {
   int totalCalories = 0;
+  int totalProtein = 0;
+  int totalCarbs = 0;
+  int totalFat = 0;
 
-  void updateCalories(int calories) {
+  void updateMacros(int calDelta, int proDelta, int carbDelta, int fatDelta) {
     setState(() {
-      totalCalories += calories;
+      totalCalories += calDelta;
+      totalProtein += proDelta;
+      totalCarbs += carbDelta;
+      totalFat += fatDelta;
+
       if (totalCalories < 0) totalCalories = 0;
+      if (totalProtein < 0) totalProtein = 0;
+      if (totalCarbs < 0) totalCarbs = 0;
+      if (totalFat < 0) totalFat = 0;
     });
+  }
+
+  // PERFECT MATCH TO YOUR FIGMA
+  Widget _buildNutrientRow(String label, int current, int max, Color progressColor) {
+    final double percent = (current / max).clamp(0.0, 1.0);
+    final String unit = label == "calories" ? "cal" : "g";
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white70),
+              ),
+              Text(
+                "$current $unit / $max $unit",
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+              ),
+              Text(
+                "${(percent * 100).round()}%",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: progressColor),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          LinearProgressIndicator(
+            value: percent,
+            color: progressColor,
+            backgroundColor: Colors.grey[800],
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -54,10 +103,7 @@ class _MealPrepPageState extends State<MealPrepPage> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () {}),
         ],
       ),
 
@@ -71,26 +117,24 @@ class _MealPrepPageState extends State<MealPrepPage> {
                 Expanded(
                   child: MealCard(
                     title: "Steamed Rice",
-                    calories: 180,
-                    imagePath: "lib/assets/rice.jpg",
                     items: const [
-                      FoodItem(name: "Basmati", calories: 180),
-                      FoodItem(name: "Red Rice", calories: 170),
+                      FoodItem(name: "Basmati", calories: 180, protein: 3, carbs: 39, fat: 0),
+                      FoodItem(name: "Red Rice", calories: 170, protein: 4, carbs: 36, fat: 1),
                     ],
-                    onChanged: updateCalories,
+                    onChanged: updateMacros,
+                    imagePath: "lib/assets/rice.jpg",
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: MealCard(
                     title: "Mallum (Greens)",
-                    calories: 85,
-                    imagePath: "lib/assets/mallum.jpg",
                     items: const [
-                      FoodItem(name: "Gotukola", calories: 85),
-                      FoodItem(name: "Mukunuwenna", calories: 90),
+                      FoodItem(name: "Gotukola", calories: 85, protein: 3, carbs: 8, fat: 3),
+                      FoodItem(name: "Mukunuwenna", calories: 90, protein: 4, carbs: 10, fat: 2),
                     ],
-                    onChanged: updateCalories,
+                    onChanged: updateMacros,
+                    imagePath: "lib/assets/mallum.jpg",
                   ),
                 ),
               ],
@@ -104,26 +148,24 @@ class _MealPrepPageState extends State<MealPrepPage> {
                 Expanded(
                   child: MealCard(
                     title: "Vegetable Curry 1",
-                    calories: 120,
-                    imagePath: "lib/assets/veg1.jpg",
                     items: const [
-                      FoodItem(name: "Carrots", calories: 120),
-                      FoodItem(name: "Potato", calories: 130),
+                      FoodItem(name: "Carrots", calories: 120, protein: 2, carbs: 25, fat: 4),
+                      FoodItem(name: "Potato", calories: 130, protein: 3, carbs: 28, fat: 2),
                     ],
-                    onChanged: updateCalories,
+                    onChanged: updateMacros,
+                    imagePath: "lib/assets/veg1.jpg",
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: MealCard(
                     title: "Vegetable Curry 2",
-                    calories: 95,
-                    imagePath: "lib/assets/veg2.jpg",
                     items: const [
-                      FoodItem(name: "Beans", calories: 95),
-                      FoodItem(name: "Bell Pepper", calories: 100),
+                      FoodItem(name: "Beans", calories: 95, protein: 4, carbs: 16, fat: 2),
+                      FoodItem(name: "Bell Pepper", calories: 100, protein: 1, carbs: 20, fat: 1),
                     ],
-                    onChanged: updateCalories,
+                    onChanged: updateMacros,
+                    imagePath: "lib/assets/veg2.jpg",
                   ),
                 ),
               ],
@@ -137,26 +179,24 @@ class _MealPrepPageState extends State<MealPrepPage> {
                 Expanded(
                   child: MealCard(
                     title: "Meat",
-                    calories: 250,
-                    imagePath: "lib/assets/meat.jpg",
                     items: const [
-                      FoodItem(name: "Chicken", calories: 250),
-                      FoodItem(name: "Fish", calories: 220),
+                      FoodItem(name: "Chicken", calories: 250, protein: 25, carbs: 0, fat: 15),
+                      FoodItem(name: "Fish", calories: 220, protein: 22, carbs: 0, fat: 12),
                     ],
-                    onChanged: updateCalories,
+                    onChanged: updateMacros,
+                    imagePath: "lib/assets/meat.jpg",
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: MealCard(
                     title: "Fresh Salad",
-                    calories: 65,
-                    imagePath: "lib/assets/salad.jpg",
                     items: const [
-                      FoodItem(name: "Lettuce", calories: 65),
-                      FoodItem(name: "Cucumber", calories: 50),
+                      FoodItem(name: "Lettuce", calories: 65, protein: 1, carbs: 3, fat: 0),
+                      FoodItem(name: "Cucumber", calories: 50, protein: 1, carbs: 11, fat: 0),
                     ],
-                    onChanged: updateCalories,
+                    onChanged: updateMacros,
+                    imagePath: "lib/assets/salad.jpg",
                   ),
                 ),
               ],
@@ -164,35 +204,25 @@ class _MealPrepPageState extends State<MealPrepPage> {
 
             const SizedBox(height: 20),
 
-            /// TOTAL CALORIES
+            /// YOUR CUSTOM PLATE — PERFECT MATCH TO FIGMA
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.green.shade900,
+                color: const Color(0xFF0A3D1F),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Total Meal Calories"),
-                      Text(
-                        "$totalCalories cal",
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.greenAccent,
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    "Your custom plate",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(
-                    value: totalCalories / 2400,
-                    color: Colors.greenAccent,
-                    backgroundColor: Colors.grey,
-                  ),
+                  const SizedBox(height: 16),
+                  _buildNutrientRow("calories", totalCalories, 2400, Colors.greenAccent),
+                  _buildNutrientRow("protein", totalProtein, 150, Colors.red),
+                  _buildNutrientRow("carbs", totalCarbs, 620, Colors.yellow),
+                  _buildNutrientRow("fat", totalFat, 220, Colors.blue),
                 ],
               ),
             ),
@@ -202,15 +232,16 @@ class _MealPrepPageState extends State<MealPrepPage> {
             /// SAVE BUTTON
             SizedBox(
               width: double.infinity,
-              height: 55,
+              height: 62,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.greenAccent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                icon: const Icon(Icons.save, color: Colors.black),
+                icon: const Icon(Icons.restaurant, color: Colors.black, size: 28),
                 label: const Text(
                   "Save my recipe",
-                  style: TextStyle(color: Colors.black),
+                  style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {},
               ),
@@ -219,13 +250,9 @@ class _MealPrepPageState extends State<MealPrepPage> {
         ),
       ),
 
-      // ── FANCY ANIMATED BOTTOM NAV ──
       bottomNavigationBar: AppBottomNav(
-        currentIndex: 1, // 1 = Meal Prep tab
-        onTap: (index) {
-          print('Tab tapped: $index');
-          // TODO: Add real navigation later
-        },
+        currentIndex: 1,
+        onTap: (index) => print('Tab tapped: $index'),
       ),
     );
   }
@@ -235,21 +262,29 @@ class _MealPrepPageState extends State<MealPrepPage> {
 class FoodItem {
   final String name;
   final int calories;
-  const FoodItem({required this.name, required this.calories});
+  final int protein;
+  final int carbs;
+  final int fat;
+
+  const FoodItem({
+    required this.name,
+    required this.calories,
+    required this.protein,
+    required this.carbs,
+    required this.fat,
+  });
 }
 
-/// FINAL MEAL CARD
+/// MEAL CARD
 class MealCard extends StatefulWidget {
   final String title;
-  final int calories;
   final List<FoodItem> items;
-  final Function(int) onChanged;
+  final Function(int cal, int pro, int carb, int fat) onChanged;
   final String imagePath;
 
   const MealCard({
     super.key,
     required this.title,
-    required this.calories,
     required this.items,
     required this.onChanged,
     required this.imagePath,
@@ -266,20 +301,28 @@ class _MealCardState extends State<MealCard> {
 
   int getWeight() => int.tryParse(weightController.text) ?? 100;
 
-  int calculateCalories() {
-    if (selectedItem == null) return 0;
-    return ((selectedItem!.calories * getWeight()) / 100).round();
+  Map<String, int> calculateMacros() {
+    if (selectedItem == null) return {'cal': 0, 'pro': 0, 'carb': 0, 'fat': 0};
+    final factor = getWeight() / 100.0;
+    return {
+      'cal': (selectedItem!.calories * factor).round(),
+      'pro': (selectedItem!.protein * factor).round(),
+      'carb': (selectedItem!.carbs * factor).round(),
+      'fat': (selectedItem!.fat * factor).round(),
+    };
   }
 
   void increase() {
     if (selectedItem == null) return;
-    widget.onChanged(calculateCalories());
+    final macros = calculateMacros();
+    widget.onChanged(macros['cal']!, macros['pro']!, macros['carb']!, macros['fat']!);
     setState(() => count++);
   }
 
   void decrease() {
     if (count > 0 && selectedItem != null) {
-      widget.onChanged(-calculateCalories());
+      final macros = calculateMacros();
+      widget.onChanged(-macros['cal']!, -macros['pro']!, -macros['carb']!, -macros['fat']!);
       setState(() => count--);
     }
   }
@@ -317,7 +360,7 @@ class _MealCardState extends State<MealCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(child: Text(widget.title)),
-                    Text("${widget.calories}"),
+                    Text("${widget.items.first.calories}"),
                   ],
                 ),
                 DropdownButton<FoodItem>(
@@ -325,10 +368,7 @@ class _MealCardState extends State<MealCard> {
                   hint: const Text("Select option"),
                   isExpanded: true,
                   items: widget.items.map((item) {
-                    return DropdownMenuItem(
-                      value: item,
-                      child: Text(item.name),
-                    );
+                    return DropdownMenuItem(value: item, child: Text(item.name));
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
@@ -345,10 +385,7 @@ class _MealCardState extends State<MealCard> {
                       child: TextField(
                         controller: weightController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          hintText: "grams",
-                          isDense: true,
-                        ),
+                        decoration: const InputDecoration(hintText: "grams", isDense: true),
                       ),
                     ),
                     const Text("g"),
@@ -357,10 +394,7 @@ class _MealCardState extends State<MealCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle),
-                      onPressed: decrease,
-                    ),
+                    IconButton(icon: const Icon(Icons.remove_circle), onPressed: decrease),
                     Text("$count"),
                     IconButton(
                       icon: const Icon(Icons.add_circle, color: Colors.greenAccent),
