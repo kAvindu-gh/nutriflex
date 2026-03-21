@@ -15,7 +15,7 @@ load_dotenv()
 if not firebase_admin._apps:
     cred = credentials.Certificate(
         os.getenv(
-            "FIREBASE_SERVICE_ACCOUNT_PATH",
+            "FIREBASE_KEY_PATH",
             "app/database/firebase_key.json"
         )
     )
@@ -24,9 +24,9 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # ── FCM v1 API setup ───────────────────────────────────────────────────
-FCM_URL = "https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
+FCM_URL = "https://fcm.googleapis.com/v1/projects/flutter-fitness-app-ea9be/messages:send"
 SERVICE_ACCOUNT_FILE = os.getenv(
-    "FIREBASE_SERVICE_ACCOUNT_PATH",
+    "FIREBASE_KEY_PATH",
     "app/database/firebase_key.json"
 )
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
