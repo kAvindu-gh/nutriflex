@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/profile_api_service.dart';
-import '../services/user_session.dart';
+import '../../services/profile_api_service.dart';
+import '../../services/user_session.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -390,7 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       slivers: [
         // ── Transparent collapsing header 
         SliverAppBar(
-          expandedHeight: 240,
+          expandedHeight: 300,
           pinned: true,
           stretch: true,
           backgroundColor: Colors.transparent,
@@ -465,7 +465,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
         // Avatar + name
         Positioned(
-          bottom: 20, left: 0, right: 0,
+          bottom: 30, left: 0, right: 0,
           child: Column(
             children: [
               ScaleTransition(
@@ -560,29 +560,21 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildBackButton() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 25, top: 10),
-      child: GestureDetector(
-        onTap: () {
-          // Navigates back to previous page (notifications or wherever this was pushed from)
-          Navigator.maybePop(context);
-        },
-        child: Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xFF0D2818),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: kGreen.withOpacity(0.6), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: kGreen.withOpacity(0.15),
-                blurRadius: 8,
-                spreadRadius: 1,
-              ),
-            ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: GestureDetector(
+          onTap: () => Navigator.maybePop(context),
+          child: Container(
+            width: 45, height: 45,
+            decoration: BoxDecoration(
+              color: const Color(0xFF111A13),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: kGreen.withOpacity(0.3)),
+            ),
+            child: const Icon(Icons.arrow_back, color: kGreen, size: 20),
           ),
-          child: const Icon(Icons.arrow_back_ios_new,
-              color: kGreen, size: 16),
         ),
       ),
     );
@@ -1340,9 +1332,9 @@ class _ToastWidgetState extends State<_ToastWidget>
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: MediaQuery.of(context).padding.top + 16,
-      left: 80,   // pushed right so it clears the back button
-      right: 60,  // narrower width
+      top: MediaQuery.of(context).padding.top + 10,
+      left: 62,
+      right: 16,
       child: SlideTransition(
         position: _slide,
         child: FadeTransition(

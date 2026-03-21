@@ -8,6 +8,11 @@ env/
 .env
 .env.local
 
+# Firebase credentials
+backend/app/database/firebase_key.json
+frontend/android/app/google-services.json
+frontend/firebase.json
+
 # IDE
 .vscode/
 .idea/
@@ -21,5 +26,3 @@ logs/
 # Temp
 temp/
 tmp/
-
-backend/app/database/firebase_key.json

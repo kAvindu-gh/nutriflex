@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
-import 'userProfile.dart'; 
+import 'package:flutter/services.dart';
+import 'main_shell.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarContrastEnforced: false,
+    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+  ));
+
+  runApp(const NutriFlexApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class NutriFlexApp extends StatelessWidget {
+  const NutriFlexApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'NutriFlex',
       debugShowCheckedModeBanner: false,
+      title: 'NutriFlex',
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F0F13),
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFF22C55E),
-          surface: const Color(0xFF0F0F13),
+        scaffoldBackgroundColor: const Color(0xFF000302),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF22C55E),
+          brightness: Brightness.dark,
         ),
         fontFamily: 'Roboto',
+        useMaterial3: true,
       ),
-      home: const ProfileScreen(),
+      home: const MainShell(),
     );
   }
 }
