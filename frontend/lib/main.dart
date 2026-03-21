@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/notification_page.dart';
+import 'main_shell.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,9 +10,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const NotificationsPage(), // This ensures you don't see the placeholder
+      home: MainShell(),
     );
   }
 }
