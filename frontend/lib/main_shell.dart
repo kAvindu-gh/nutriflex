@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/home_page.dart';
 import 'screens/bmi_screen.dart';
+import 'screens/notification_page.dart';
 import 'widgets/bottom_nav.dart';
 
 // ── Placeholder screens for tabs not yet built ───────────────────────────────
@@ -83,7 +84,7 @@ class _MainShellState extends State<MainShell> {
     HomePage(),
     _PlaceholderScreen(name: 'Meal Prep', icon: Icons.restaurant_menu),
     _BmiShell(),
-    _PlaceholderScreen(name: 'Alerts',    icon: Icons.notifications_none),
+    NotificationsPage(),  // ← from notification branch
   ];
 
   @override

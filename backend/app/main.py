@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import recipes
 from .routers import bmi, usda, nutrients
 from app.routers.onboarding_router import router as onboarding_router
+from app.routers.notifications import router as notification_router
 
 app = FastAPI(
     title="NutriFlex API",
@@ -12,9 +13,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3164",   # ✅ your current Flutter Web URL
-        "http://127.0.0.1:3164"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +24,7 @@ app.include_router(bmi.router)
 app.include_router(usda.router)
 app.include_router(nutrients.router)
 app.include_router(onboarding_router)
+app.include_router(notification_router)
 
 
 @app.get("/")

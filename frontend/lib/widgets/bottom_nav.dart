@@ -13,10 +13,10 @@ class _NavTab {
 }
 
 const _tabs = [
-  _NavTab(icon: Icons.home_outlined,       activeIcon: Icons.home,          label: 'Home'),
-  _NavTab(icon: Icons.restaurant_menu,     activeIcon: Icons.restaurant_menu,    label: 'Meal Prep'),
-  _NavTab(icon: Icons.calculate_outlined,  activeIcon: Icons.calculate,     label: 'BMI'),
-  _NavTab(icon: Icons.notifications_none,  activeIcon: Icons.notifications, label: 'Alerts'),
+  _NavTab(icon: Icons.home_outlined,       activeIcon: Icons.home,           label: 'Home'),
+  _NavTab(icon: Icons.restaurant_menu,     activeIcon: Icons.restaurant_menu, label: 'Meal Prep'),
+  _NavTab(icon: Icons.calculate_outlined,  activeIcon: Icons.calculate,      label: 'BMI'),
+  _NavTab(icon: Icons.notifications_none,  activeIcon: Icons.notifications,  label: 'Alerts'),
 ];
 
 // ── Particle model ────────────────────────────────────────────────────────────
@@ -105,7 +105,6 @@ class _AppBottomNavState extends State<AppBottomNav>
     super.initState();
     _prevIndex = widget.currentIndex;
 
-    // One bubble controller per tab
     _bubbleCtrls = List.generate(
       _tabs.length,
       (_) => AnimationController(
@@ -124,13 +123,11 @@ class _AppBottomNavState extends State<AppBottomNav>
             ]).animate(c))
         .toList();
 
-    // Particle ticker
     _particleCtrl = AnimationController(
         vsync: this, duration: const Duration(seconds: 60))
       ..addListener(_tickParticles)
       ..repeat();
 
-    // Slide indicator
     _slideCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
     _slideAnim = Tween<double>(
@@ -165,11 +162,8 @@ class _AppBottomNavState extends State<AppBottomNav>
 
   void _handleTap(int index, Offset globalPos) {
     HapticFeedback.lightImpact();
-
-    // Bubble pop
     _bubbleCtrls[index].forward(from: 0);
 
-    // Spawn particles at tap location
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     if (box != null) {
       final local = box.globalToLocal(globalPos);
@@ -242,7 +236,6 @@ class _AppBottomNavState extends State<AppBottomNav>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Icon bubble
                             AnimatedBuilder(
                               animation: _bubbleAnims[i],
                               builder: (_, child) => Transform.scale(
@@ -292,10 +285,7 @@ class _AppBottomNavState extends State<AppBottomNav>
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 2),
-
-                            // Label
                             AnimatedDefaultTextStyle(
                               duration: const Duration(milliseconds: 250),
                               style: TextStyle(
@@ -309,10 +299,7 @@ class _AppBottomNavState extends State<AppBottomNav>
                               ),
                               child: Text(tab.label),
                             ),
-
                             const SizedBox(height: 2),
-
-                            // Green dot — only visible on selected tab
                             AnimatedOpacity(
                               opacity: isSelected ? 1.0 : 0.0,
                               duration: const Duration(milliseconds: 300),

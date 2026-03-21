@@ -7,13 +7,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/notification_page.dart';
 
-import 'package:frontend/main.dart';
+
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
+<<<<<<< HEAD
     await tester.pumpWidget(const NutriFlexApp());
+=======
+    await tester.pumpWidget(const NotificationsPage());
+>>>>>>> origin/notification-page
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
