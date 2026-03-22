@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // ─── Base URL — change ONLY this one line when your IP changes ───────────────
 // Physical device : your machine's IPv4 (e.g. 192.168.8.132)
 // Emulator        : 10.0.2.2
-const String kBaseUrl = 'http://192.168.8.132:8000';
+const String kBaseUrl = 'http://192.168.1.3:8000';
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
@@ -186,25 +186,67 @@ class ApiService {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // MEAL PREP
+  // ─────────────────────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> saveMealPrep({
+    required String rice,
+    required int riceSize,
+    required String meat,
+    required int meatSize,
+    required String vegetable1,
+    required int vegetable1Size,
+    required String vegetable2,
+    required int vegetable2Size,
+    required String mallum,
+    required int mallumSize,
+    required String salad,
+    required int saladSize,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final uri = Uri.parse('$kBaseUrl/Meal_Prep_With_Five_Cards').replace(
+      queryParameters: {
+        'access_token':    user.uid,
+        'rice':            rice,
+        'rice_size':       riceSize.toString(),
+        'meat':            meat,
+        'meat_size':       meatSize.toString(),
+        'vegetable1':      vegetable1,
+        'vegetable1_size': vegetable1Size.toString(),
+        'vegetable2':      vegetable2,
+        'vegetable2_size': vegetable2Size.toString(),
+        'mallum':          mallum,
+        'mallum_size':     mallumSize.toString(),
+        'salad':           salad,
+        'salad_size':      saladSize.toString(),
+      },
+    );
+
+    final response = await http.post(uri).timeout(const Duration(seconds: 15));
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    if (response.body.isEmpty) throw Exception('Server error (${response.statusCode})');
+    final detail = jsonDecode(response.body)['detail'] ?? 'Unknown error';
+    throw Exception(detail);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // PROFILE
   // ─────────────────────────────────────────────────────────────────────────
 
   static const String _profileBase = '$kBaseUrl/api/v1';
 
-  // GET profile
   static Future<Map<String, dynamic>> getProfile(String userId) async {
     final response = await http.get(
       Uri.parse('$_profileBase/profile/$userId'),
       headers: {'Content-Type': 'application/json'},
     );
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
+    if (response.statusCode == 200) return jsonDecode(response.body);
     final error = jsonDecode(response.body);
     throw Exception(error['detail'] ?? 'Failed to load profile');
   }
 
-  // PATCH profile — update any field
   static Future<Map<String, dynamic>> updateProfile(
       String userId, Map<String, dynamic> fields) async {
     final response = await http.patch(
@@ -212,14 +254,11 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(fields),
     );
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
+    if (response.statusCode == 200) return jsonDecode(response.body);
     final error = jsonDecode(response.body);
     throw Exception(error['detail'] ?? 'Failed to update profile');
   }
 
-  // DELETE a field — set to null
   static Future<Map<String, dynamic>> deleteField(
       String userId, String field) async {
     final response = await http.delete(
@@ -227,14 +266,11 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'field': field}),
     );
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
+    if (response.statusCode == 200) return jsonDecode(response.body);
     final error = jsonDecode(response.body);
     throw Exception(error['detail'] ?? 'Failed to delete field');
   }
 
-  // POST upload profile picture
   static Future<Map<String, dynamic>> uploadProfilePicture(
       String userId, File imageFile) async {
     final request = http.MultipartRequest(
@@ -246,9 +282,7 @@ class ApiService {
     );
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
+    if (response.statusCode == 200) return jsonDecode(response.body);
     final error = jsonDecode(response.body);
     throw Exception(error['detail'] ?? 'Failed to upload picture');
   }

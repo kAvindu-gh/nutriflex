@@ -3,45 +3,8 @@ import 'package:flutter/services.dart';
 import 'screens/home_page.dart';
 import 'screens/bmi_screen.dart';
 import 'screens/notification_page.dart';
+import 'screens/meal_prep_page.dart';
 import 'widgets/bottom_nav.dart';
-
-// ── Placeholder screen ────────────────────────────────────────────────────────
-class _PlaceholderScreen extends StatelessWidget {
-  final String name;
-  final IconData icon;
-  const _PlaceholderScreen({required this.name, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: [0.0, 0.6, 1.0],
-          colors: [Color(0xFF0D2818), Color(0xFF103E23), Color(0xFF000302)],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.green.withOpacity(0.4), size: 52),
-            const SizedBox(height: 16),
-            Text(name,
-                style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            const Text('Coming soon',
-                style: TextStyle(color: Colors.green, fontSize: 13)),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── BMI shell ─────────────────────────────────────────────────────────────────
 class _BmiShell extends StatelessWidget {
@@ -82,9 +45,9 @@ class _MainShellState extends State<MainShell> {
 
   final List<Widget> _screens = const [
     HomePage(),
-    _PlaceholderScreen(name: 'Meal Prep', icon: Icons.restaurant_menu),
+    MealPrepPage(),       // ← Meal Prep tab wired
     _BmiShell(),
-    NotificationsPage(), // ← profile button is inside NotificationsPage header
+    NotificationsPage(),  // ← profile button inside NotificationsPage header
   ];
 
   @override
