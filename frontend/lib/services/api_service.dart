@@ -20,12 +20,12 @@ class ApiService {
     required String salad,
     required int saladSize,
   }) async {
-    //final user = FirebaseAuth.instance.currentUser;
-    //if (user == null) throw Exception('User not logged in');
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('User not logged in');
 
     final uri = Uri.parse('$kBaseUrl/Meal_Prep_With_Five_Cards').replace(
       queryParameters: {
-        'access_token': "cwAiBjlN65VQARqAC9ofVsh0z0B3",
+        'access_token': user.uid,
         'rice': rice,
         'rice_size': riceSize.toString(),
         'meat': meat,
