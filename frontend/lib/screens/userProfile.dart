@@ -2,9 +2,10 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../services/profile_api_service.dart';
-import '../../services/user_session.dart';
+import '../services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -29,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   String? _error;
 
-  // ── Animation controllers 
+  // ── Animation controllers
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late AnimationController _avatarController;
@@ -40,11 +41,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   late Animation<double> _avatarScaleAnim;
   late Animation<double> _avatarFadeAnim;
 
-  // Staggered animations for each row
   late List<Animation<Offset>> _rowSlideAnims;
   late List<Animation<double>> _rowFadeAnims;
 
-  // ── Toast overlay 
   OverlayEntry? _toastEntry;
 
   @override
@@ -52,27 +51,21 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.initState();
 
     _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
+        vsync: this, duration: const Duration(milliseconds: 700));
     _slideController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
+        vsync: this, duration: const Duration(milliseconds: 600));
     _avatarController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
+        vsync: this, duration: const Duration(milliseconds: 800));
     _staggerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
+        vsync: this, duration: const Duration(milliseconds: 1000));
 
-    _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
+    _fadeAnim =
+        CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.06),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
+    ).animate(
+        CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
 
     _avatarScaleAnim = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _avatarController, curve: Curves.elasticOut),
@@ -83,7 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
     );
 
-    // 6 rows — each staggers 80ms apart
     _rowSlideAnims = List.generate(6, (i) {
       final start = i * 0.1;
       final end = (start + 0.4).clamp(0.0, 1.0);
@@ -120,12 +112,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
-  // ── Load profile 
+  // ── Load profile using Firebase Auth current user ─────────────────────────
   Future<void> _loadProfile() async {
     setState(() { _isLoading = true; _error = null; });
     try {
       _userId = "lDbTtG0CgdO7aDvFzZIl8UqXJFF3";
-      final data = await ProfileApiService.getProfile(_userId!);
+      final data = await ApiService.getProfile(_userId!);
       _applyProfileData(data);
       _fadeController.forward();
       _slideController.forward();
@@ -136,10 +128,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     } catch (e) {
       setState(() => _error = e.toString().replaceAll('Exception: ', ''));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
-
 
   void _applyProfileData(Map<String, dynamic> data) {
     setState(() {
@@ -155,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _updateField(Map<String, dynamic> fields) async {
     if (_userId == null) return;
     try {
-      final data = await ProfileApiService.updateProfile(_userId!, fields);
+      final data = await ApiService.updateProfile(_userId!, fields);
       _applyProfileData(data);
       _showToast("Saved successfully", isSuccess: true);
     } catch (e) {
@@ -163,11 +154,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-
   Future<void> _deleteField(String field) async {
     if (_userId == null) return;
     try {
-      final data = await ProfileApiService.deleteField(_userId!, field);
+      final data = await ApiService.deleteField(_userId!, field);
       _applyProfileData(data);
       _showToast("${_fieldLabel(field)} removed", isSuccess: true);
     } catch (e) {
@@ -177,15 +167,15 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   String _fieldLabel(String field) {
     switch (field) {
-      case 'mobile': return 'Mobile';
-      case 'birthday': return 'Birthday';
-      case 'gender': return 'Gender';
+      case 'mobile':          return 'Mobile';
+      case 'birthday':        return 'Birthday';
+      case 'gender':          return 'Gender';
       case 'profile_pic_url': return 'Profile picture';
-      default: return field;
+      default:                return field;
     }
   }
 
-  // ── Floating toast 
+  // ── Toast ─────────────────────────────────────────────────────────────────
   void _showToast(String message, {required bool isSuccess}) {
     _toastEntry?.remove();
     _toastEntry = null;
@@ -205,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     overlay.insert(entry);
   }
 
-  // ── Image picker 
+  // ── Image picker ──────────────────────────────────────────────────────────
   Future<void> _onPickImage() async {
     if (profilePicUrl != null) {
       _showImageOptions();
@@ -226,9 +216,11 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             _sheetHandle(),
-            const SizedBox(height: 8),
             const Text("Profile Picture",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -236,7 +228,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 backgroundColor: Color(0xFF1A3A26),
                 child: Icon(Icons.photo_library_outlined, color: kGreen),
               ),
-              title: const Text("Change photo", style: TextStyle(color: Colors.white)),
+              title: const Text("Change photo",
+                  style: TextStyle(color: Colors.white)),
               onTap: () async {
                 Navigator.pop(ctx);
                 await _pickFromGallery();
@@ -248,7 +241,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 backgroundColor: Color(0xFF2A1010),
                 child: Icon(Icons.delete_outline, color: Colors.redAccent),
               ),
-              title: const Text("Remove photo", style: TextStyle(color: Colors.redAccent)),
+              title: const Text("Remove photo",
+                  style: TextStyle(color: Colors.redAccent)),
               onTap: () {
                 Navigator.pop(ctx);
                 _confirmDelete(
@@ -273,7 +267,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (picked == null) return;
     _showToast("Uploading...", isSuccess: true);
     try {
-      final data = await ProfileApiService.uploadProfilePicture(_userId!, File(picked.path));
+      final data =
+          await ApiService.uploadProfilePicture(_userId!, File(picked.path));
       _applyProfileData(data);
       _showToast("Profile picture updated", isSuccess: true);
     } catch (e) {
@@ -281,8 +276,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-
-  void _confirmDelete({required String label, required VoidCallback onConfirm}) {
+  void _confirmDelete(
+      {required String label, required VoidCallback onConfirm}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF181818),
@@ -294,7 +289,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             _sheetHandle(),
-            const SizedBox(height: 12),
             Container(
               width: 64, height: 64,
               decoration: BoxDecoration(
@@ -306,7 +300,10 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             const SizedBox(height: 16),
             Text("Remove $label?",
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text("This will permanently clear your $label.",
                 textAlign: TextAlign.center,
@@ -319,10 +316,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white24),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Cancel", style: TextStyle(color: Colors.white)),
+                    child: const Text("Cancel",
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -334,10 +333,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Remove", style: TextStyle(color: Colors.white)),
+                    child: const Text("Remove",
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ),
               ],
@@ -348,10 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // UI BUILD
-  // ══════════════════════════════════════════════════════════════════════════
-
+  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -364,13 +362,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // ── Radial gradient background (103E23 → 000302 → 000503) 
-          Positioned.fill(
-            child: CustomPaint(painter: _RadialBgPainter()),
-          ),
-          // ── Main content 
+          Positioned.fill(child: CustomPaint(painter: _RadialBgPainter())),
           _isLoading
-              ? const Center(child: CircularProgressIndicator(color: kGreen))
+              ? const Center(
+                  child: CircularProgressIndicator(color: kGreen))
               : _error != null
                   ? _buildErrorState()
                   : FadeTransition(
@@ -388,7 +383,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildBody() {
     return CustomScrollView(
       slivers: [
-        // ── Transparent collapsing header 
         SliverAppBar(
           expandedHeight: 300,
           pinned: true,
@@ -402,16 +396,11 @@ class _ProfileScreenState extends State<ProfileScreen>
             stretchModes: const [StretchMode.zoomBackground],
             background: _buildHeaderBackground(),
           ),
-          // Transparent frosted glass app bar when collapsed
           bottom: PreferredSize(
-            preferredSize: Size.zero,
-            child: Container(),
-          ),
-          title: _buildCollapsedTitle(),
+              preferredSize: Size.zero, child: Container()),
+          title: const SizedBox.shrink(),
           leading: _buildBackButton(),
         ),
-
-        // ── Content 
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,10 +413,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               _buildLogoutButton(),
               const SizedBox(height: 16),
               Center(
-                child: Text(
-                  "App Version 0.1",
-                  style: TextStyle(color: Colors.grey.shade800, fontSize: 12),
-                ),
+                child: Text("App Version 0.1",
+                    style: TextStyle(
+                        color: Colors.grey.shade800, fontSize: 12)),
               ),
               const SizedBox(height: 48),
             ],
@@ -441,10 +429,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Transparent — radial bg from Scaffold shows through
         Container(color: Colors.transparent),
-
-        // Subtle extra glow right behind avatar
         Positioned(
           top: 40, left: 0, right: 0,
           child: Center(
@@ -462,8 +447,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ),
         ),
-
-        // Avatar + name
         Positioned(
           bottom: 30, left: 0, right: 0,
           child: Column(
@@ -482,26 +465,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                             shape: BoxShape.circle,
                             color: const Color(0xFF1A1A1A),
                             border: Border.all(
-                              color: kGreen.withOpacity(0.6),
-                              width: 2.5,
-                            ),
+                                color: kGreen.withOpacity(0.6), width: 2.5),
                             boxShadow: [
                               BoxShadow(
-                                color: kGreen.withOpacity(0.15),
-                                blurRadius: 24,
-                                spreadRadius: 4,
-                              ),
+                                  color: kGreen.withOpacity(0.15),
+                                  blurRadius: 24,
+                                  spreadRadius: 4),
                             ],
                           ),
                           child: profilePicUrl != null
                               ? ClipOval(
-                                  child: Image.network(
-                                    profilePicUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                        Icons.person, color: Colors.white38, size: 50),
-                                  ),
-                                )
+                                  child: Image.network(profilePicUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.person,
+                                          color: Colors.white38,
+                                          size: 50)))
                               : const Icon(Icons.person,
                                   color: Colors.white38, size: 50),
                         ),
@@ -509,11 +488,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                           bottom: 4, right: 4,
                           child: Container(
                             width: 28, height: 28,
-                            decoration: BoxDecoration(
-                              color: kGreen,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.transparent, width: 2),
-                            ),
+                            decoration: const BoxDecoration(
+                                color: kGreen, shape: BoxShape.circle),
                             child: const Icon(Icons.camera_alt,
                                 color: Colors.white, size: 13),
                           ),
@@ -526,37 +502,25 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 14),
               FadeTransition(
                 opacity: _avatarFadeAnim,
-                child: Text(
-                  fullName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
-                ),
+                child: Text(fullName,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2)),
               ),
               const SizedBox(height: 4),
               FadeTransition(
                 opacity: _avatarFadeAnim,
-                child: Text(
-                  email ?? '',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 13,
-                  ),
-                ),
+                child: Text(email ?? '',
+                    style: TextStyle(
+                        color: Colors.grey.shade500, fontSize: 13)),
               ),
             ],
           ),
         ),
       ],
     );
-  }
-
-  // Frosted glass title shown when header is collapsed
-  Widget _buildCollapsedTitle() {
-    return const SizedBox.shrink(); 
   }
 
   Widget _buildBackButton() {
@@ -580,37 +544,31 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Section label 
   Widget _buildSectionLabel(String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.6,
-        ),
-      ),
+      child: Text(label,
+          style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.6)),
     );
   }
 
-  // ── Info card with staggered rows ──────────────────────────────────────────
   Widget _buildInfoCard() {
     final rows = [
-      // 0 — profile picture
       _buildRow(
         index: 0,
         icon: Icons.camera_alt_outlined,
         title: "Profile Picture",
         value: profilePicUrl != null ? "Tap to change or remove" : "Not set",
-        valueColor: profilePicUrl != null ? kGreen : Colors.grey.shade700,
+        valueColor:
+            profilePicUrl != null ? kGreen : Colors.grey.shade700,
         trailingIcon: Icons.add_a_photo_outlined,
         onTap: _onPickImage,
         showDivider: true,
       ),
-      // 1 — full name
       _buildRow(
         index: 1,
         icon: Icons.person_outline_rounded,
@@ -626,7 +584,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         showDivider: true,
       ),
-      // 2 — mobile
       _buildRow(
         index: 2,
         icon: Icons.smartphone_rounded,
@@ -641,9 +598,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           keyboardType: TextInputType.phone,
           canDelete: mobile.isNotEmpty,
           onSave: (val) {
-            // Clean input — remove spaces and dashes
             final cleaned = val.replaceAll(RegExp(r'[\s\-()]'), '');
-            // Auto-add +94 if user typed local format like 07x
             String formatted = cleaned;
             if (cleaned.startsWith('0') && cleaned.length == 10) {
               formatted = '+94${cleaned.substring(1)}';
@@ -659,13 +614,13 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         showDivider: true,
       ),
-      // 3 — email
       _buildRow(
         index: 3,
         icon: Icons.alternate_email_rounded,
         title: "E-mail",
         value: (email == null || email!.isEmpty) ? "Not set" : email!,
-        valueColor: (email == null || email!.isEmpty) ? Colors.grey.shade700 : kGreen,
+        valueColor:
+            (email == null || email!.isEmpty) ? Colors.grey.shade700 : kGreen,
         trailingIcon: Icons.mail_outline_rounded,
         onTap: () => _showEditSheet(
           fieldLabel: "E-mail",
@@ -676,7 +631,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         showDivider: true,
       ),
-      // 4 — birthday
       _buildRow(
         index: 4,
         icon: Icons.cake_outlined,
@@ -693,7 +647,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                 )
             : null,
       ),
-      // 5 — gender
       _buildRow(
         index: 5,
         icon: Icons.people_outline_rounded,
@@ -717,10 +670,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF103E23).withOpacity(0.2),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: kGreen.withOpacity(0.35),
-              width: 1,
-            ),
+            border: Border.all(color: kGreen.withOpacity(0.35), width: 1),
           ),
           child: Column(children: rows),
         ),
@@ -728,7 +678,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Single animated row 
   Widget _buildRow({
     required int index,
     required IconData icon,
@@ -759,7 +708,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                       horizontal: 20, vertical: 17),
                   child: Row(
                     children: [
-                      // Icon container
                       Container(
                         width: 38, height: 38,
                         decoration: BoxDecoration(
@@ -769,7 +717,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Icon(icon, color: kGreen, size: 18),
                       ),
                       const SizedBox(width: 14),
-                      // Text
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -787,7 +734,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ],
                         ),
                       ),
-                      // Trailing icon
                       Container(
                         width: 28, height: 28,
                         decoration: BoxDecoration(
@@ -804,18 +750,16 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             if (showDivider)
               Divider(
-                color: Colors.white.withOpacity(0.04),
-                height: 1,
-                indent: 72,
-                endIndent: 20,
-              ),
+                  color: Colors.white.withOpacity(0.04),
+                  height: 1,
+                  indent: 72,
+                  endIndent: 20),
           ],
         ),
       ),
     );
   }
 
-  // ── Logout button 
   Widget _buildLogoutButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -831,13 +775,11 @@ class _ProfileScreenState extends State<ProfileScreen>
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16)),
           ),
-          child: const Text(
-            "Logout",
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600),
-          ),
+          child: const Text("Logout",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600)),
         ),
       ),
     );
@@ -913,13 +855,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                   hintText: hintText ?? "Enter $fieldLabel",
                   hintStyle: TextStyle(color: Colors.grey.shade700),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: kGreen, width: 1.5),
-                  ),
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide:
+                          const BorderSide(color: kGreen, width: 1.5)),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 14),
                 ),
@@ -959,7 +900,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Birthday picker
   Future<void> _onPickBirthday() async {
     if (birthday != null) {
       showModalBottomSheet(
@@ -996,7 +936,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 contentPadding: EdgeInsets.zero,
                 leading: const CircleAvatar(
                   backgroundColor: Color(0xFF2A1010),
-                  child: Icon(Icons.delete_outline, color: Colors.redAccent),
+                  child:
+                      Icon(Icons.delete_outline, color: Colors.redAccent),
                 ),
                 title: const Text("Remove birthday",
                     style: TextStyle(color: Colors.redAccent)),
@@ -1040,7 +981,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // ── Gender picker
   void _onSelectGender() {
     final options = ["male", "female"];
     showModalBottomSheet(
@@ -1068,7 +1008,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: gender == option ? kGreen : Colors.grey.shade700,
+                        color: gender == option
+                            ? kGreen
+                            : Colors.grey.shade700,
                         width: 2,
                       ),
                       color: gender == option
@@ -1116,7 +1058,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Logout
+  // ── Logout ────────────────────────────────────────────────────────────────
   void _onLogout() {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
@@ -1148,7 +1090,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             const SizedBox(height: 8),
             Text("Are you sure you want to logout?",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                style:
+                    TextStyle(color: Colors.grey.shade500, fontSize: 13)),
             const SizedBox(height: 28),
             Row(
               children: [
@@ -1174,14 +1117,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                         context: context,
                         barrierDismissible: false,
                         builder: (_) => const Center(
-                          child: CircularProgressIndicator(color: kGreen),
+                          child:
+                              CircularProgressIndicator(color: kGreen),
                         ),
                       );
-                      await UserSession.logout(_userId ?? '');
-                      if (context.mounted) Navigator.pop(context);
-                      if (context.mounted) {
-                        Navigator.of(context)
-                            .popUntil((route) => route.isFirst);
+                      // Sign out from Firebase
+                      await FirebaseAuth.instance.signOut();
+                      if (mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/auth', (route) => false);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -1202,7 +1146,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Reusable sheet handle
   Widget _sheetHandle() {
     return Center(
       child: Container(
@@ -1216,7 +1159,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Error state
   Widget _buildErrorState() {
     return Center(
       child: Padding(
@@ -1236,7 +1178,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             const SizedBox(height: 20),
             Text(_error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white60, fontSize: 14)),
+                style:
+                    const TextStyle(color: Colors.white60, fontSize: 14)),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _loadProfile,
@@ -1255,26 +1198,23 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 }
 
-// ── Radial gradient background painter
+// ── Background painter ────────────────────────────────────────────────────────
 class _RadialBgPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // Main radial gradient — centered slightly above middle (where avatar is)
     final center = Offset(size.width / 2, size.height * 0.28);
     final radius = size.width * 1.1;
-
     final paint = Paint()
       ..shader = RadialGradient(
         center: Alignment.center,
         radius: 1.0,
         colors: const [
-          Color(0xFF103E23), // 0% — dark green center
-          Color(0xFF000302), // 99% — near black
-          Color(0xFF000503), // 100% — deep black
+          Color(0xFF103E23),
+          Color(0xFF000302),
+          Color(0xFF000503),
         ],
         stops: const [0.0, 0.72, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
-
     canvas.drawRect(Offset.zero & size, paint);
   }
 
@@ -1282,7 +1222,7 @@ class _RadialBgPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ── Animated floating toast
+// ── Animated floating toast ───────────────────────────────────────────────────
 class _ToastWidget extends StatefulWidget {
   final String message;
   final bool isSuccess;
@@ -1349,7 +1289,9 @@ class _ToastWidgetState extends State<_ToastWidget>
                     : const Color(0xFF2A0D0D),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: widget.isSuccess ? const Color(0xFF22C55E) : Colors.redAccent,
+                  color: widget.isSuccess
+                      ? const Color(0xFF22C55E)
+                      : Colors.redAccent,
                   width: 1,
                 ),
                 boxShadow: [

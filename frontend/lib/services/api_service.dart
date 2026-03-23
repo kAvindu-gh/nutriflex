@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
 // ─── Base URL — change ONLY this one line when your IP changes ───────────────
-// Physical device : your machine's IPv4 (e.g. 192.168.8.132)
-// Emulator        : 10.0.2.2
 const String kBaseUrl = 'http://192.168.1.3:8000';
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
@@ -94,16 +92,81 @@ class SearchedRecipe {
   }
 }
 
+// ─── Notification response wrapper ───────────────────────────────────────────
+
+class ApiResponse<T> {
+  final bool success;
+  final T? data;
+  final String? error;
+
+  const ApiResponse.ok(this.data)
+      : success = true,
+        error = null;
+
+  const ApiResponse.err(this.error)
+      : success = false,
+        data = null;
+}
+
+// ─── Notification model ───────────────────────────────────────────────────────
+
+class NotificationItem {
+  final String type;
+  final String title;
+  final String body;
+  final String time;
+  bool isRead;
+
+  NotificationItem({
+    required this.type,
+    required this.title,
+    required this.body,
+    required this.time,
+    this.isRead = false,
+  });
+
+  factory NotificationItem.fromData(Map<String, dynamic> data) {
+    return NotificationItem(
+      type:  data['type']  ?? 'general',
+      title: data['title'] ?? '',
+      body:  data['body']  ?? '',
+      time:  data['time']  ?? 'just now',
+    );
+  }
+}
+
 // ─── API Service ──────────────────────────────────────────────────────────────
 
 class ApiService {
   static String get baseUrl => kBaseUrl;
+  static const _headers = {'Content-Type': 'application/json'};
 
-  // ── Gets real Firebase uid — throws if not logged in ──
+  // ── Gets real Firebase uid ────────────────────────────────────────────────
   static String get _userId {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) throw Exception('No logged-in user found');
     return uid;
+  }
+
+  // ── Internal POST helper for notification endpoints ───────────────────────
+  static Future<ApiResponse<Map<String, dynamic>>> _notifPost(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$kBaseUrl$path'),
+            headers: _headers,
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 10));
+      final json = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200) return ApiResponse.ok(json);
+      return ApiResponse.err(json['detail']?.toString() ?? 'Unknown error');
+    } catch (e) {
+      return ApiResponse.err('Network error: $e');
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -115,14 +178,12 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('$kBaseUrl/onboarding/$_userId'),
-            headers: {'Content-Type': 'application/json'},
+            headers: _headers,
             body: jsonEncode(answer),
           )
           .timeout(const Duration(seconds: 10));
-      print('[NutriFlex] Onboarding step saved: ${response.statusCode} - ${response.body}');
       return response.statusCode == 200;
     } catch (e) {
-      print('[NutriFlex] Onboarding error: $e');
       return false;
     }
   }
@@ -171,13 +232,11 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('$kBaseUrl/bmi/calculate?user_id=${user?.uid}'),
-            headers: {'Content-Type': 'application/json'},
+            headers: _headers,
             body: jsonEncode(body),
           )
           .timeout(const Duration(seconds: 15));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
+      if (response.statusCode == 200) return jsonDecode(response.body);
       final detail = jsonDecode(response.body)['detail'] ?? 'Unknown error';
       throw Exception(detail);
     } catch (e) {
@@ -190,18 +249,12 @@ class ApiService {
   // ─────────────────────────────────────────────────────────────────────────
 
   static Future<Map<String, dynamic>> saveMealPrep({
-    required String rice,
-    required int riceSize,
-    required String meat,
-    required int meatSize,
-    required String vegetable1,
-    required int vegetable1Size,
-    required String vegetable2,
-    required int vegetable2Size,
-    required String mallum,
-    required int mallumSize,
-    required String salad,
-    required int saladSize,
+    required String rice,      required int riceSize,
+    required String meat,      required int meatSize,
+    required String vegetable1, required int vegetable1Size,
+    required String vegetable2, required int vegetable2Size,
+    required String mallum,    required int mallumSize,
+    required String salad,     required int saladSize,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('User not logged in');
@@ -240,7 +293,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getProfile(String userId) async {
     final response = await http.get(
       Uri.parse('$_profileBase/profile/$userId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
     );
     if (response.statusCode == 200) return jsonDecode(response.body);
     final error = jsonDecode(response.body);
@@ -251,7 +304,7 @@ class ApiService {
       String userId, Map<String, dynamic> fields) async {
     final response = await http.patch(
       Uri.parse('$_profileBase/profile/$userId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode(fields),
     );
     if (response.statusCode == 200) return jsonDecode(response.body);
@@ -263,7 +316,7 @@ class ApiService {
       String userId, String field) async {
     final response = await http.delete(
       Uri.parse('$_profileBase/profile/$userId/field'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode({'field': field}),
     );
     if (response.statusCode == 200) return jsonDecode(response.body);
@@ -286,4 +339,117 @@ class ApiService {
     final error = jsonDecode(response.body);
     throw Exception(error['detail'] ?? 'Failed to upload picture');
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // NOTIFICATIONS
+  // ─────────────────────────────────────────────────────────────────────────
+
+  static Future<bool> isBackendReachable() async {
+    try {
+      final res = await http
+          .get(Uri.parse(kBaseUrl))
+          .timeout(const Duration(seconds: 5));
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<ApiResponse<Map<String, dynamic>>> registerToken({
+    required String userId,
+    required String fcmToken,
+  }) =>
+      _notifPost('/notifications/register-token', {
+        'user_id':   userId,
+        'fcm_token': fcmToken,
+      });
+
+  static Future<ApiResponse<Map<String, dynamic>>> notifyAddToCart({
+    required String userId,
+    required String ingredientName,
+    String? recipeName,
+  }) =>
+      _notifPost('/notifications/add-to-cart', {
+        'user_id':         userId,
+        'ingredient_name': ingredientName,
+        if (recipeName != null) 'recipe_name': recipeName,
+      });
+
+  static Future<ApiResponse<Map<String, dynamic>>> notifySaveRecipe({
+    required String userId,
+    required String recipeName,
+    required String recipeId,
+  }) =>
+      _notifPost('/notifications/save-recipe', {
+        'user_id':     userId,
+        'recipe_name': recipeName,
+        'recipe_id':   recipeId,
+      });
+
+  static Future<ApiResponse<Map<String, dynamic>>> notifyTrendingRecipe({
+    required String userId,
+    required String recipeName,
+    required String recipeId,
+    int? trendingRank,
+  }) =>
+      _notifPost('/notifications/trending-recipe', {
+        'user_id':     userId,
+        'recipe_name': recipeName,
+        'recipe_id':   recipeId,
+        if (trendingRank != null) 'trending_rank': trendingRank,
+      });
+
+  static Future<ApiResponse<Map<String, dynamic>>> notifyOrderConfirmed({
+    required String userId,
+    required String orderId,
+    required String storeName,
+    required int itemCount,
+  }) =>
+      _notifPost('/notifications/order-confirmed', {
+        'user_id':    userId,
+        'order_id':   orderId,
+        'store_name': storeName,
+        'item_count': itemCount,
+      });
+
+  static Future<ApiResponse<Map<String, dynamic>>> notifyFitnessDetails({
+    required String userId,
+    double? caloriesBurned,
+    int? steps,
+    String? workoutName,
+    bool goalReached = false,
+  }) =>
+      _notifPost('/notifications/fitness-details', {
+        'user_id': userId,
+        if (caloriesBurned != null) 'calories_burned': caloriesBurned,
+        if (steps != null) 'steps': steps,
+        if (workoutName != null) 'workout_name': workoutName,
+        'goal_reached': goalReached,
+      });
+
+  static Future<ApiResponse<Map<String, dynamic>>> notifyWeeklyProgress({
+    required String userId,
+    required int weekNumber,
+    double? caloriesAvg,
+    int? workoutsCompleted,
+    bool goalAchieved = false,
+  }) =>
+      _notifPost('/notifications/weekly-progress', {
+        'user_id':     userId,
+        'week_number': weekNumber,
+        if (caloriesAvg != null) 'calories_avg': caloriesAvg,
+        if (workoutsCompleted != null) 'workouts_completed': workoutsCompleted,
+        'goal_achieved': goalAchieved,
+      });
+
+  static Future<ApiResponse<Map<String, dynamic>>> broadcast({
+    required String title,
+    required String body,
+    required String notificationType,
+  }) =>
+      _notifPost('/notifications/broadcast', {
+        'title':             title,
+        'body':              body,
+        'notification_type': notificationType,
+      });
 }

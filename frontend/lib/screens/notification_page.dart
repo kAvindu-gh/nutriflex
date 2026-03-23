@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/notification_service.dart';
+import '../services/api_service.dart';
 import 'userProfile.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -152,7 +152,7 @@ class _NotificationsPageState extends State<NotificationsPage>
   // ── Replace with real logged-in user ID from your auth layer ──────────────
   static const String _userId = 'user_demo_001';
 
-  final _svc = NutriFlexNotificationService();
+  
 
   int  _filterIndex = 0;
   bool _loading     = true;
@@ -290,7 +290,7 @@ class _NotificationsPageState extends State<NotificationsPage>
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
-        await _svc.registerToken(userId: _userId, fcmToken: token);
+        await ApiService.registerToken(userId: _userId, fcmToken: token);
       }
     } catch (_) {
       // Network unavailable — retried automatically next launch
@@ -303,27 +303,27 @@ class _NotificationsPageState extends State<NotificationsPage>
   Future<void> _triggerBackendNotifications() async {
     try {
       await Future.wait([
-        _svc.notifyTrendingRecipe(
+        ApiService.notifyTrendingRecipe(
           userId: _userId, recipeName: 'Super Green Smoothie',
           recipeId: 'recipe_001', trendingRank: 1,
         ),
-        _svc.notifyOrderConfirmed(
+        ApiService.notifyOrderConfirmed(
           userId: _userId, orderId: 'order_042',
           storeName: 'NutriStore', itemCount: 5,
         ),
-        _svc.notifyFitnessDetails(
+        ApiService.notifyFitnessDetails(
           userId: _userId, workoutName: 'Morning Run',
           caloriesBurned: 420, steps: 6240,
         ),
-        _svc.notifyAddToCart(
+        ApiService.notifyAddToCart(
           userId: _userId, ingredientName: 'Protein Powder',
           recipeName: 'Post-Workout Shake',
         ),
-        _svc.notifySaveRecipe(
+        ApiService.notifySaveRecipe(
           userId: _userId, recipeName: 'Avocado Chicken Bowl',
           recipeId: 'recipe_007',
         ),
-        _svc.notifyWeeklyProgress(
+        ApiService.notifyWeeklyProgress(
           userId: _userId, weekNumber: 12,
           caloriesAvg: 2380, workoutsCompleted: 5, goalAchieved: false,
         ),

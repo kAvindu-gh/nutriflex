@@ -69,6 +69,16 @@ class _MealPrepPageState extends State<MealPrepPage>
         vsync: this, duration: const Duration(milliseconds: 600));
     _pageFade = CurvedAnimation(parent: _pageCtrl, curve: Curves.easeOut);
     _pageCtrl.forward();
+
+    // Show BMI reminder after page loads
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        _showToast(
+          'Tip: Calculate your BMI first for accurate daily requirements',
+          isError: false,
+        );
+      }
+    });
   }
 
   @override
@@ -108,7 +118,9 @@ class _MealPrepPageState extends State<MealPrepPage>
 
   double _parseValue(dynamic raw) {
     if (raw == null) return 0;
-    final match = RegExp(r'[\d.]+').firstMatch(raw.toString());
+    final str = raw.toString().trim();
+    if (str.isEmpty) return 0;
+    final match = RegExp(r'[\d.]+').firstMatch(str);
     if (match == null) return 0;
     return double.tryParse(match.group(0)!) ?? 0;
   }
@@ -148,7 +160,7 @@ class _MealPrepPageState extends State<MealPrepPage>
         saladSize:      _saladKey.currentState!.weight,
       );
 
-      // ── Parse consumed values ─────────────────────────────────────────
+      // ── Parse using exact keys from backend ───────────────────────────
       final newCalConsumed  = _parseValue(result["Calory consumed: "]);
       final newCalReq       = _parseValue(result["Calory requirement: "]);
       final newProtConsumed = _parseValue(result["Protein consumed: "]);
@@ -241,34 +253,19 @@ class _MealPrepPageState extends State<MealPrepPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: kGreen.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: kGreen.withOpacity(0.3), width: 1),
-                            ),
-                            child: const Icon(Icons.restaurant_menu,
-                                color: kGreen, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Meal Prep Builder',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3)),
-                              Text('Build your Sri Lankan meal plate',
-                                  style: TextStyle(
-                                      color: Colors.white38, fontSize: 12)),
-                            ],
-                          ),
+                          Text('Meal Prep Builder',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.3)),
+                          SizedBox(height: 2),
+                          Text('Build your Sri Lankan meal plate',
+                              style: TextStyle(
+                                  color: Colors.white38, fontSize: 13)),
                         ],
                       ),
                     ],
@@ -365,10 +362,7 @@ class _MealPrepPageState extends State<MealPrepPage>
 
   // ── Nutrition card ────────────────────────────────────────────────────────
   Widget _buildNutritionCard() {
-    return AnimatedBuilder(
-      animation: _progressCtrl,
-      builder: (_, __) {
-        return Container(
+    return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: const Color(0xFF0A1A0F),
@@ -425,14 +419,12 @@ class _MealPrepPageState extends State<MealPrepPage>
             ],
           ),
         );
-      },
-    );
   }
 
   Widget _nutrientBar(String label, double consumed, double max,
       double animPct, String unit, Color color) {
-    final pct = (consumed / max).clamp(0.0, 1.0);
-    final displayPct = (animPct * 100).round();
+    final pct = max > 0 ? (consumed / max).clamp(0.0, 1.0) : 0.0;
+    final displayPct = (pct * 100).round();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -447,14 +439,14 @@ class _MealPrepPageState extends State<MealPrepPage>
                     fontWeight: FontWeight.w500)),
             Row(children: [
               Text(
-                "${consumed.toStringAsFixed(consumed == consumed.roundToDouble() ? 0 : 1)}",
+                consumed.toStringAsFixed(1),
                 style: TextStyle(
                     color: color,
                     fontSize: 13,
                     fontWeight: FontWeight.bold),
               ),
               Text(
-                " / ${max.toStringAsFixed(max == max.roundToDouble() ? 0 : 1)} $unit",
+                " / ${max.toStringAsFixed(1)} $unit",
                 style: const TextStyle(color: Colors.white38, fontSize: 12),
               ),
               const SizedBox(width: 8),
@@ -475,7 +467,6 @@ class _MealPrepPageState extends State<MealPrepPage>
         ),
         const SizedBox(height: 8),
         Stack(children: [
-          // Background track
           Container(
             height: 8,
             decoration: BoxDecoration(
@@ -483,9 +474,9 @@ class _MealPrepPageState extends State<MealPrepPage>
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          // Animated fill
+          // Use actual pct — not animPct — for reliable bar fill
           FractionallySizedBox(
-            widthFactor: animPct,
+            widthFactor: pct,
             child: Container(
               height: 8,
               decoration: BoxDecoration(
@@ -547,7 +538,7 @@ class _MealPrepPageState extends State<MealPrepPage>
                           color: Colors.black, size: 20),
                       const SizedBox(width: 10),
                       Text(
-                        _hasSaved ? "Update My Recipe" : "Save My Recipe",
+                        _hasSaved ? "Update My Custom Plate" : "Save My Recipe",
                         style: const TextStyle(
                             color: Colors.black,
                             fontSize: 16,
@@ -622,8 +613,8 @@ class _MealCardState extends State<_MealCard>
           border: Border.all(
             color: isSelected
                 ? kGreen.withOpacity(0.3 + _selectAnim.value * 0.2)
-                : Colors.white.withOpacity(0.06),
-            width: isSelected ? 1.2 : 1,
+                : Colors.grey.withOpacity(0.35),
+            width: isSelected ? 1.2 : 1.2,
           ),
           boxShadow: isSelected
               ? [
@@ -696,49 +687,70 @@ class _MealCardState extends State<_MealCard>
                         letterSpacing: 0.2)),
                 const SizedBox(height: 8),
 
-                // Dropdown
-                DropdownButtonFormField<String>(
-                  value: _selected,
-                  hint: const Text("Select food",
-                      style: TextStyle(color: Colors.white38, fontSize: 10)),
-                  isExpanded: true,
-                  dropdownColor: const Color(0xFF0D2818),
-                  style: const TextStyle(color: Colors.white, fontSize: 10),
-                  icon: const Icon(Icons.keyboard_arrow_down,
-                      color: kGreen, size: 16),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 8),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                            color: Colors.white.withOpacity(0.08))),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                            color: Colors.white.withOpacity(0.08))),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            const BorderSide(color: kGreen, width: 1.5)),
-                    filled: true,
-                    fillColor: Colors.black.withOpacity(0.2),
+                // Dropdown with animated border on selection
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _selected != null
+                          ? kGreen.withOpacity(0.6)
+                          : Colors.grey.withOpacity(0.25),
+                      width: _selected != null ? 1.5 : 1,
+                    ),
+                    color: _selected != null
+                        ? kGreen.withOpacity(0.06)
+                        : Colors.black.withOpacity(0.2),
+                    boxShadow: _selected != null
+                        ? [BoxShadow(
+                            color: kGreen.withOpacity(0.12),
+                            blurRadius: 8, spreadRadius: 0)]
+                        : [],
                   ),
-                  items: widget.items
-                      .map((name) => DropdownMenuItem(
-                            value: name,
-                            child: Text(name,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 10)),
-                          ))
-                      .toList(),
-                  onChanged: (val) {
-                    setState(() => _selected = val);
-                    if (val != null) {
-                      _selectCtrl.forward(from: 0);
-                    }
-                  },
+                  child: DropdownButtonFormField<String>(
+                    value: _selected,
+                    hint: const Text("Select food",
+                        style: TextStyle(color: Colors.white38, fontSize: 10)),
+                    isExpanded: true,
+                    dropdownColor: const Color(0xFF0D2818),
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                    icon: AnimatedRotation(
+                      turns: _selected != null ? 0 : 0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: _selected != null ? kGreen : Colors.grey,
+                        size: 16,
+                      ),
+                    ),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      border: OutlineInputBorder(
+                          borderSide: BorderSide.none),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide.none),
+                      filled: false,
+                    ),
+                    items: widget.items
+                        .map((name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 10)),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      setState(() => _selected = val);
+                      if (val != null) {
+                        _selectCtrl.forward(from: 0);
+                      }
+                    },
+                  ),
                 ),
                 const SizedBox(height: 8),
 

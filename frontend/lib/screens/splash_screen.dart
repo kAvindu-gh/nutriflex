@@ -62,48 +62,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     await Future.delayed(const Duration(seconds: 5));
     if (!mounted) return;
 
-    await _routeUser();
-  }
-
-  // ── Decides where to send the user ──────────────────────────────────────────
-  Future<void> _routeUser() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      Navigator.of(context).pushReplacementNamed('/auth');
-      return;
-    }
-
-    // Reload to get latest emailVerified status from Firebase
-    await user.reload();
-    final refreshed = FirebaseAuth.instance.currentUser;
-
-    // Email/password users must verify email first
-    final isEmailProvider = refreshed?.providerData.any((p) => p.providerId == 'password') ?? false;
-    if (isEmailProvider && !(refreshed?.emailVerified ?? false)) {
-      await FirebaseAuth.instance.signOut();
-      if (mounted) Navigator.of(context).pushReplacementNamed('/auth');
-      return;
-    }
-
-    // Check onboarding completion inside users/{uid}/onboarding/data
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(refreshed!.uid)
-          .collection('onboarding')
-          .doc('data')
-          .get();
-
-      final onboardingDone = doc.exists &&
-          doc.data() != null &&
-          doc.data()!['commitment'] != null;
-
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(onboardingDone ? '/home' : '/onboarding');
-    } catch (_) {
-      if (mounted) Navigator.of(context).pushReplacementNamed('/onboarding');
-    }
+    // Always go to login page — no auto login
+    Navigator.of(context).pushReplacementNamed('/auth');
   }
 
   @override
