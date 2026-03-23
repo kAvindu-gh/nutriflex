@@ -1,11 +1,7 @@
-//bottom_nav.dart
-
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// ── Tab data ─────────────────────────────────────────────────────────────────
 
 class _NavTab {
   final IconData icon;
@@ -15,13 +11,11 @@ class _NavTab {
 }
 
 const _tabs = [
-  _NavTab(icon: Icons.home_outlined,       activeIcon: Icons.home,          label: 'Home'),
-  _NavTab(icon: Icons.restaurant_menu,     activeIcon: Icons.restaurant_menu,    label: 'Meal Prep'),
-  _NavTab(icon: Icons.calculate_outlined,  activeIcon: Icons.calculate,     label: 'BMI'),
-  _NavTab(icon: Icons.notifications_none,  activeIcon: Icons.notifications, label: 'Alerts'),
+  _NavTab(icon: Icons.home_outlined,      activeIcon: Icons.home,            label: 'Home'),
+  _NavTab(icon: Icons.restaurant_menu,    activeIcon: Icons.restaurant_menu, label: 'Meal Prep'),
+  _NavTab(icon: Icons.calculate_outlined, activeIcon: Icons.calculate,       label: 'BMI'),
+  _NavTab(icon: Icons.notifications_none, activeIcon: Icons.notifications,   label: 'Alerts'),
 ];
-
-// ── Particle model ────────────────────────────────────────────────────────────
 
 class _Particle {
   late Offset position;
@@ -50,8 +44,6 @@ class _Particle {
   bool get isDead => opacity < 0.02 || radius < 0.3;
 }
 
-// ── Particle painter ──────────────────────────────────────────────────────────
-
 class _ParticlePainter extends CustomPainter {
   final List<_Particle> particles;
   _ParticlePainter(this.particles);
@@ -70,7 +62,6 @@ class _ParticlePainter extends CustomPainter {
   bool shouldRepaint(_ParticlePainter old) => true;
 }
 
-// ── Main widget ───────────────────────────────────────────────────────────────
 class AppBottomNav extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -85,19 +76,12 @@ class AppBottomNav extends StatefulWidget {
   State<AppBottomNav> createState() => _AppBottomNavState();
 }
 
-class _AppBottomNavState extends State<AppBottomNav>
-    with TickerProviderStateMixin {
-
-  // Bubble press animation per tab
+class _AppBottomNavState extends State<AppBottomNav> with TickerProviderStateMixin {
   late final List<AnimationController> _bubbleCtrls;
   late final List<Animation<double>> _bubbleAnims;
-
-  // Particle system
   final List<_Particle> _particles = [];
   final math.Random _rng = math.Random();
   late final AnimationController _particleCtrl;
-
-  // Sliding indicator
   late final AnimationController _slideCtrl;
   late Animation<double> _slideAnim;
   int _prevIndex = 0;
@@ -107,14 +91,13 @@ class _AppBottomNavState extends State<AppBottomNav>
     super.initState();
     _prevIndex = widget.currentIndex;
 
-    // One bubble controller per tab
     _bubbleCtrls = List.generate(
       _tabs.length,
-      (_) => AnimationController(
-          vsync: this, duration: const Duration(milliseconds: 300)),
+      (_) => AnimationController(vsync: this, duration: const Duration(milliseconds: 300)),
     );
+
     _bubbleAnims = _bubbleCtrls
-        .map((c) => TweenSequence([
+        .map((c) => TweenSequence<double>([
               TweenSequenceItem(
                   tween: Tween(begin: 1.0, end: 1.35)
                       .chain(CurveTween(curve: Curves.easeOut)),
@@ -126,13 +109,11 @@ class _AppBottomNavState extends State<AppBottomNav>
             ]).animate(c))
         .toList();
 
-    // Particle ticker
     _particleCtrl = AnimationController(
         vsync: this, duration: const Duration(seconds: 60))
       ..addListener(_tickParticles)
       ..repeat();
 
-    // Slide indicator
     _slideCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
     _slideAnim = Tween<double>(
@@ -167,11 +148,8 @@ class _AppBottomNavState extends State<AppBottomNav>
 
   void _handleTap(int index, Offset globalPos) {
     HapticFeedback.lightImpact();
-
-    // Bubble pop
     _bubbleCtrls[index].forward(from: 0);
 
-    // Spawn particles at tap location
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     if (box != null) {
       final local = box.globalToLocal(globalPos);
@@ -179,7 +157,6 @@ class _AppBottomNavState extends State<AppBottomNav>
         _particles.add(_Particle(local, _rng));
       }
     }
-
     widget.onTap(index);
   }
 
@@ -207,36 +184,28 @@ class _AppBottomNavState extends State<AppBottomNav>
               color: const Color(0xFF0A1F12).withOpacity(0.08),
               borderRadius: BorderRadius.circular(32),
               border: Border.all(
-                color: Colors.green.withOpacity(0.18),
-                width: 1.2,
-              ),
+                  color: Colors.green.withOpacity(0.18), width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
+                    color: Colors.green.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2)),
               ],
             ),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // Particle layer
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(32),
                     child: CustomPaint(
-                      painter: _ParticlePainter(List.from(_particles)),
-                    ),
+                        painter: _ParticlePainter(List.from(_particles))),
                   ),
                 ),
-
-                // Tab buttons
                 Row(
                   children: List.generate(_tabs.length, (i) {
                     final tab = _tabs[i];
                     final isSelected = widget.currentIndex == i;
-
                     return Expanded(
                       child: GestureDetector(
                         behavior: HitTestBehavior.translucent,
@@ -244,13 +213,10 @@ class _AppBottomNavState extends State<AppBottomNav>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Icon bubble
                             AnimatedBuilder(
                               animation: _bubbleAnims[i],
                               builder: (_, child) => Transform.scale(
-                                scale: _bubbleAnims[i].value,
-                                child: child,
-                              ),
+                                  scale: _bubbleAnims[i].value, child: child),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 300),
                                 curve: Curves.easeOut,
@@ -269,10 +235,10 @@ class _AppBottomNavState extends State<AppBottomNav>
                                   boxShadow: isSelected
                                       ? [
                                           BoxShadow(
-                                            color: Colors.green.withOpacity(0.2),
-                                            blurRadius: 10,
-                                            spreadRadius: 1,
-                                          )
+                                              color: Colors.green
+                                                  .withOpacity(0.2),
+                                              blurRadius: 10,
+                                              spreadRadius: 1)
                                         ]
                                       : [],
                                 ),
@@ -294,10 +260,7 @@ class _AppBottomNavState extends State<AppBottomNav>
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 2),
-
-                            // Label
                             AnimatedDefaultTextStyle(
                               duration: const Duration(milliseconds: 250),
                               style: TextStyle(
@@ -311,10 +274,7 @@ class _AppBottomNavState extends State<AppBottomNav>
                               ),
                               child: Text(tab.label),
                             ),
-
                             const SizedBox(height: 2),
-
-                            // Green dot — only visible on selected tab
                             AnimatedOpacity(
                               opacity: isSelected ? 1.0 : 0.0,
                               duration: const Duration(milliseconds: 300),
@@ -326,10 +286,9 @@ class _AppBottomNavState extends State<AppBottomNav>
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.green.withOpacity(0.7),
-                                      blurRadius: 6,
-                                      spreadRadius: 1,
-                                    ),
+                                        color: Colors.green.withOpacity(0.7),
+                                        blurRadius: 6,
+                                        spreadRadius: 1)
                                   ],
                                 ),
                               ),
