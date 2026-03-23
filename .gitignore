@@ -10,6 +10,9 @@ env/
 
 # Firebase credentials
 backend/app/database/firebase_key.json
+frontend/firebase.json
+frontend/android/app/google-services.json
+frontend/android/gradle/wrapper/gradle-wrapper.properties
 
 
 # IDE
