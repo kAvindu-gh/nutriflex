@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
-// ─── Base URL — change ONLY this one line when your IP changes ───────────────
-const String kBaseUrl = 'http://192.168.1.3:8000';
+// ─── Base URL — change ONLY this one line when your IP changes ────────────────
+const String kBaseUrl = 'http://10.0.2.2:8000';
 
-// ─── Data Models ─────────────────────────────────────────────────────────────
+// ─── Data Models ──────────────────────────────────────────────────────────────
 
 class TrendingRecipe {
   final String id;
@@ -92,7 +92,47 @@ class SearchedRecipe {
   }
 }
 
-// ─── Notification response wrapper ───────────────────────────────────────────
+// ─── Cart Item Model ──────────────────────────────────────────────────────────
+
+class CartItem {
+  final String recipeId;
+  final String recipeName;
+  final double calories;
+  final double proteinG;
+  final double fatG;
+  final double carbsG;
+  final String? imagePath;
+  final int quantity;
+  final double pricePerItem;
+
+  CartItem({
+    required this.recipeId,
+    required this.recipeName,
+    required this.calories,
+    required this.proteinG,
+    required this.fatG,
+    required this.carbsG,
+    this.imagePath,
+    required this.quantity,
+    required this.pricePerItem,
+  });
+
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+    return CartItem(
+      recipeId: json['recipe_id'] ?? '',
+      recipeName: json['recipe_name'] ?? '',
+      calories: (json['calories'] ?? 0).toDouble(),
+      proteinG: (json['protein_g'] ?? 0).toDouble(),
+      fatG: (json['fat_g'] ?? 0).toDouble(),
+      carbsG: (json['carbs_g'] ?? 0).toDouble(),
+      imagePath: json['image_path'],
+      quantity: json['quantity'] ?? 1,
+      pricePerItem: (json['price_per_item'] ?? 4.99).toDouble(),
+    );
+  }
+}
+
+// ─── Notification response wrapper ────────────────────────────────────────────
 
 class ApiResponse<T> {
   final bool success;
@@ -135,20 +175,20 @@ class NotificationItem {
   }
 }
 
-// ─── API Service ──────────────────────────────────────────────────────────────
+// ─── API Service ───────────────────────────────────────────────────────────────
 
 class ApiService {
   static String get baseUrl => kBaseUrl;
   static const _headers = {'Content-Type': 'application/json'};
 
-  // ── Gets real Firebase uid ────────────────────────────────────────────────
+  // ── Gets real Firebase uid ─────────────────────────────────────────────────
   static String get _userId {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) throw Exception('No logged-in user found');
     return uid;
   }
 
-  // ── Internal POST helper for notification endpoints ───────────────────────
+  // ── Internal POST helper for notification endpoints ────────────────────────
   static Future<ApiResponse<Map<String, dynamic>>> _notifPost(
     String path,
     Map<String, dynamic> body,
@@ -169,9 +209,9 @@ class ApiService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
   // ONBOARDING
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
 
   static Future<bool> updateOnboardingStep(Map<String, String> answer) async {
     try {
@@ -188,9 +228,9 @@ class ApiService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
   // RECIPES
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
 
   static Future<List<TrendingRecipe>> getTrendingRecipes({int limit = 50}) async {
     try {
@@ -222,9 +262,96 @@ class ApiService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
+  // CART
+  // ───────────────────────────────────────────────────────────────────────────
+
+  static const String _cartBase = '$kBaseUrl/api/v1/cart';
+
+  static Future<Map<String, dynamic>> getCart() async {
+    final res = await http
+        .get(Uri.parse('$_cartBase/$_userId'), headers: _headers)
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to load cart');
+  }
+
+  static Future<Map<String, dynamic>> addToCart(TrendingRecipe recipe) async {
+    final body = {
+      'recipe_id': recipe.id.isNotEmpty
+          ? recipe.id
+          : recipe.name.toLowerCase().replaceAll(' ', '_'),
+      'recipe_name': recipe.name,
+      'calories': recipe.calories,
+      'protein_g': recipe.proteinG,
+      'fat_g': recipe.fatG,
+      'carbs_g': recipe.carbsG,
+      'quantity': 1,
+      'price_per_item': 4.99,
+    };
+    final res = await http
+        .post(
+          Uri.parse('$_cartBase/$_userId/add'),
+          headers: _headers,
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to add to cart');
+  }
+
+  static Future<Map<String, dynamic>> removeFromCart(String recipeId) async {
+    final res = await http
+        .delete(
+          Uri.parse('$_cartBase/$_userId/remove/$recipeId'),
+          headers: _headers,
+        )
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to remove from cart');
+  }
+
+  static Future<Map<String, dynamic>> updateCartQuantity(
+    String recipeId,
+    int quantity,
+  ) async {
+    final res = await http
+        .patch(
+          Uri.parse('$_cartBase/$_userId/quantity/$recipeId'),
+          headers: _headers,
+          body: jsonEncode({'quantity': quantity}),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to update quantity');
+  }
+
+  static Future<Map<String, dynamic>> clearCart() async {
+    final res = await http
+        .delete(
+          Uri.parse('$_cartBase/$_userId/clear'),
+          headers: _headers,
+        )
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to clear cart');
+  }
+
+  static Future<Map<String, dynamic>> applyPromoCode(String code) async {
+    final res = await http
+        .post(
+          Uri.parse('$_cartBase/$_userId/promo'),
+          headers: _headers,
+          body: jsonEncode({'promo_code': code}),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to apply promo code');
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
   // BMI
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
 
   static Future<Map<String, dynamic>> calculateBmi(Map<String, dynamic> body) async {
     try {
@@ -244,9 +371,9 @@ class ApiService {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
   // MEAL PREP
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
 
   static Future<Map<String, dynamic>> saveMealPrep({
     required String rice,      required int riceSize,
@@ -284,9 +411,9 @@ class ApiService {
     throw Exception(detail);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
   // PROFILE
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
 
   static const String _profileBase = '$kBaseUrl/api/v1';
 
@@ -340,9 +467,9 @@ class ApiService {
     throw Exception(error['detail'] ?? 'Failed to upload picture');
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
   // NOTIFICATIONS
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
 
   static Future<bool> isBackendReachable() async {
     try {

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'services/firebase_options.dart';
 import 'services/calorie_provider_service.dart';
+import 'services/cart_provider.dart';
 import 'screens/login_page.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding.dart';
@@ -39,8 +40,11 @@ class NutriFlexApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CalorieProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CalorieProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+      ],
       child: MaterialApp(
         title: 'NutriFlex',
         debugShowCheckedModeBanner: false,
@@ -59,9 +63,9 @@ class NutriFlexApp extends StatelessWidget {
         ),
         home: const SplashScreen(),
         routes: {
-          '/auth':        (context) => const LoginPage(),
-          '/onboarding':  (context) => const WelcomeScreen(),
-          '/home':        (context) => const MainShell(),
+          '/auth':       (context) => const LoginPage(),
+          '/onboarding': (context) => const WelcomeScreen(),
+          '/home':       (context) => const MainShell(),
         },
       ),
     );

@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/calorie_provider_service.dart';
+import '../services/cart_provider.dart';
+import 'cart_screen.dart';
 
-// ── Animated + button widget (boxed, 360° spin on tap) ──────────────────────
+// ── Animated + button widget (boxed, 360° spin on tap) ───────────────────────
 class _AddButton extends StatefulWidget {
   final VoidCallback onTap;
   const _AddButton({required this.onTap});
@@ -71,7 +73,7 @@ class _AddButtonState extends State<_AddButton>
   }
 }
 
-// ── Pulsing/glitch highlight for calorie stat card ──────────────────────────
+// ── Pulsing/glitch highlight for calorie stat card ───────────────────────────
 class _PulsingStatCard extends StatefulWidget {
   final String value;
   final String label;
@@ -121,12 +123,9 @@ class _PulsingStatCardState extends State<_PulsingStatCard>
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(
-                207,
-                25,
-                66,
-                45,
-              ).withOpacity(glowOpacity),
+              color: const Color.fromARGB(207, 25, 66, 45).withOpacity(
+                glowOpacity,
+              ),
               border: Border.all(
                 color: Colors.green.withOpacity(borderOpacity),
                 width: 1.5,
@@ -164,7 +163,7 @@ class _PulsingStatCardState extends State<_PulsingStatCard>
   }
 }
 
-// ── Main page ────────────────────────────────────────────────────────────────
+// ── Main page ─────────────────────────────────────────────────────────────────
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
@@ -174,7 +173,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
-  final List<TrendingRecipe> _cartItems = [];
 
   // ── Trending state
   List<TrendingRecipe> _trendingRecipes = [];
@@ -187,10 +185,10 @@ class _HomePageState extends State<HomePage>
   String? _searchError;
   bool _hasSearched = false;
 
-  // ── Suggestion state (filters trending recipes while typing)
+  // ── Suggestion state
   String _typingQuery = '';
 
-  // ── Fade animation for trending list (refresh)
+  // ── Fade animation for trending list
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
 
@@ -219,103 +217,48 @@ class _HomePageState extends State<HomePage>
     super.dispose();
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────
+  // ── Image helpers (unchanged) ──────────────────────────────────────
 
-  /// Returns the best-matching local asset path for a recipe name.
   String _recipeImage(String name, {bool isSearchResult = false}) {
     if (isSearchResult) return 'lib/assets/grilled_chicken.jpg';
-
     final n = name.toLowerCase();
-
-    if (n.contains('beef') ||
-        n.contains('stew') ||
-        n.contains('burger') ||
-        n.contains('meatball') ||
-        n.contains('meatloaf') ||
-        n.contains('steak'))
+    if (n.contains('beef') || n.contains('stew') || n.contains('burger') ||
+        n.contains('meatball') || n.contains('meatloaf') || n.contains('steak'))
       return 'lib/assets/beef_stew.jpg';
-
     if (n.contains('chicken') || n.contains('turkey') || n.contains('poultry'))
       return 'lib/assets/grilled_chicken.jpg';
-
-    if (n.contains('fish') ||
-        n.contains('salmon') ||
-        n.contains('tuna') ||
-        n.contains('shrimp') ||
-        n.contains('prawn') ||
-        n.contains('seafood') ||
-        n.contains('crab') ||
-        n.contains('lobster') ||
-        n.contains('tilapia'))
+    if (n.contains('fish') || n.contains('salmon') || n.contains('tuna') ||
+        n.contains('shrimp') || n.contains('prawn') || n.contains('seafood') ||
+        n.contains('crab') || n.contains('lobster') || n.contains('tilapia'))
       return 'lib/assets/fish_pate.jpg';
-
-    if (n.contains('pasta') ||
-        n.contains('spaghetti') ||
-        n.contains('lasagna') ||
-        n.contains('fettuccine') ||
-        n.contains('penne') ||
-        n.contains('macaroni') ||
+    if (n.contains('pasta') || n.contains('spaghetti') || n.contains('lasagna') ||
+        n.contains('fettuccine') || n.contains('penne') || n.contains('macaroni') ||
         n.contains('ramen'))
       return 'lib/assets/pasta.jpg';
-
-    if (n.contains('salad') ||
-        n.contains('coleslaw') ||
-        n.contains('slaw') ||
+    if (n.contains('salad') || n.contains('coleslaw') || n.contains('slaw') ||
         n.contains('noodle'))
       return 'lib/assets/noodles.jpg';
-
-    if (n.contains('soup') ||
-        n.contains('broth') ||
-        n.contains('chowder') ||
-        n.contains('bisque') ||
-        n.contains('chili'))
+    if (n.contains('soup') || n.contains('broth') || n.contains('chowder') ||
+        n.contains('bisque') || n.contains('chili'))
       return 'lib/assets/lentil_soup.jpg';
-
-    if (n.contains('rice') ||
-        n.contains('pilaf') ||
-        n.contains('risotto') ||
-        n.contains('fried rice') ||
-        n.contains('biryani') ||
-        n.contains('grain'))
+    if (n.contains('rice') || n.contains('pilaf') || n.contains('risotto') ||
+        n.contains('fried rice') || n.contains('biryani') || n.contains('grain'))
       return 'lib/assets/fried_rice.jpg';
-
-    if (n.contains('egg') ||
-        n.contains('pancake') ||
-        n.contains('waffle') ||
-        n.contains('omelette') ||
-        n.contains('omelet') ||
-        n.contains('breakfast') ||
-        n.contains('oatmeal') ||
-        n.contains('toast') ||
-        n.contains('bacon'))
+    if (n.contains('egg') || n.contains('pancake') || n.contains('waffle') ||
+        n.contains('omelette') || n.contains('omelet') || n.contains('breakfast') ||
+        n.contains('oatmeal') || n.contains('toast') || n.contains('bacon'))
       return 'lib/assets/cuttlefish.jpg';
-
-    if (n.contains('cake') ||
-        n.contains('cookie') ||
-        n.contains('brownie') ||
-        n.contains('pie') ||
-        n.contains('pudding') ||
-        n.contains('dessert') ||
-        n.contains('ice cream') ||
-        n.contains('chocolate') ||
-        n.contains('muffin'))
+    if (n.contains('cake') || n.contains('cookie') || n.contains('brownie') ||
+        n.contains('pie') || n.contains('pudding') || n.contains('dessert') ||
+        n.contains('ice cream') || n.contains('chocolate') || n.contains('muffin'))
       return 'lib/assets/seafood_cake.jpg';
-
-    if (n.contains('pizza') ||
-        n.contains('vegan') ||
-        n.contains('tofu') ||
-        n.contains('lentil') ||
-        n.contains('bean') ||
-        n.contains('vegetable') ||
-        n.contains('mushroom') ||
-        n.contains('spinach') ||
-        n.contains('broccoli'))
+    if (n.contains('pizza') || n.contains('vegan') || n.contains('tofu') ||
+        n.contains('lentil') || n.contains('bean') || n.contains('vegetable') ||
+        n.contains('mushroom') || n.contains('spinach') || n.contains('broccoli'))
       return 'lib/assets/cheese_pizza.jpg';
-
     if (n.contains('mutton')) return 'lib/assets/mutton_curry.jpg';
     if (n.contains('pork')) return 'lib/assets/pork_marinade.jpg';
     if (n.contains('kottu')) return 'lib/assets/kottu.jpg';
-
     return 'lib/assets/pork_marinade.jpg';
   }
 
@@ -341,175 +284,45 @@ class _HomePageState extends State<HomePage>
     return {'name': raw, 'qty': '—', 'unit': '—'};
   }
 
-  // ── Cart ─────────────────────────────────────────────────────────
+  // ── Cart (now uses CartProvider + navigates to CartScreen) ─────────
 
-  void _addToCart(TrendingRecipe recipe) {
-    if (_cartItems.any((r) => r.id == recipe.id)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${recipe.name} is already in cart'),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-    setState(() => _cartItems.add(recipe));
+  Future<void> _addToCart(TrendingRecipe recipe) async {
+    final cart = context.read<CartProvider>();
+    final success = await cart.addToCart(recipe);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${recipe.name} added to cart ✓'),
-        backgroundColor: Colors.green.shade700,
+        content: Text(
+          success ? '${recipe.name} added to cart ✓' : 'Already in cart',
+        ),
+        backgroundColor: success ? Colors.green.shade700 : Colors.orange,
         duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
   void _openCart() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF0A1F12),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModal) {
-          return Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'My Cart',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    if (_cartItems.isNotEmpty)
-                      TextButton(
-                        onPressed: () {
-                          setState(() => _cartItems.clear());
-                          setModal(() {});
-                        },
-                        child: const Text(
-                          'Clear all',
-                          style: TextStyle(color: Colors.red, fontSize: 13),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (_cartItems.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: Text(
-                        'Your cart is empty',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  )
-                else
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.45,
-                    ),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _cartItems.length,
-                      itemBuilder: (_, i) {
-                        final item = _cartItems[i];
-                        final tag = _recipeTag(item);
-                        final tc = tag == 'Muscle Gain'
-                            ? Colors.green
-                            : Colors.red;
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.asset(
-                              _recipeImage(item.name),
-                              width: 44,
-                              height: 44,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                width: 44,
-                                height: 44,
-                                color: Colors.green.withOpacity(0.15),
-                                child: const Icon(
-                                  Icons.restaurant_menu,
-                                  color: Colors.green,
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            item.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${item.calories.toStringAsFixed(0)} Cal  •  ${item.proteinG.toStringAsFixed(1)}g Protein',
-                            style: const TextStyle(
-                              color: Color(0xFFB0C4B8),
-                              fontSize: 12,
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: tc.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: tc.withOpacity(0.4),
-                                  ),
-                                ),
-                                child: Text(
-                                  tag,
-                                  style: TextStyle(color: tc, fontSize: 10),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.grey,
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  setState(() => _cartItems.removeAt(i));
-                                  setModal(() {});
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => const CartScreen(),
+        transitionsBuilder: (_, animation, __, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1.0, 0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            child: child,
           );
         },
+        transitionDuration: const Duration(milliseconds: 320),
       ),
     );
   }
 
-  // ── API calls ─────────────────────────────────────────────────────
+  // ── API calls ──────────────────────────────────────────────────────
 
   Future<void> _fetchTrending() async {
     setState(() {
@@ -563,7 +376,7 @@ class _HomePageState extends State<HomePage>
     });
   }
 
-  // ── Build ─────────────────────────────────────────────────────────
+  // ── Build ──────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -587,7 +400,6 @@ class _HomePageState extends State<HomePage>
           body: SafeArea(
             child: Column(
               children: [
-                // ── FIXED top section (not scrollable)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: Column(
@@ -605,7 +417,6 @@ class _HomePageState extends State<HomePage>
                     ],
                   ),
                 ),
-                // ── SCROLLABLE content below
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -622,100 +433,102 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Header ───────────────────────────────────────────────────────
+  // ── Header (now reads itemCount from CartProvider) ─────────────────
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Consumer<CartProvider>(
+      builder: (context, cart, _) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'NutriFlex',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Discover premium meals',
-              style: TextStyle(color: Color(0xFFB0C4B8)),
-            ),
-          ],
-        ),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.green.withOpacity(0.4),
-                  width: 1.2,
-                ),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.shopping_cart,
-                  color: Colors.green,
-                  size: 22,
-                ),
-                onPressed: _openCart,
-                padding: EdgeInsets.zero,
-              ),
-            ),
-            if (_cartItems.isNotEmpty)
-              Positioned(
-                right: -4,
-                top: -4,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NutriFlex',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  child: Text(
-                    '${_cartItems.length}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Discover premium meals',
+                  style: TextStyle(color: Color(0xFFB0C4B8)),
+                ),
+              ],
+            ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.green.withOpacity(0.4),
+                      width: 1.2,
                     ),
                   ),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.shopping_cart,
+                      color: Colors.green,
+                      size: 22,
+                    ),
+                    onPressed: _openCart,
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
+                if (cart.itemCount > 0)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${cart.itemCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
-  // ── Search Bar ───────────────────────────────────────────────────
+  // ── Search bar (unchanged logic) ───────────────────────────────────
 
   Widget _buildSearchBar() {
-    // Filter trending recipes by the current typed query
     final suggestions = _typingQuery.trim().isEmpty
         ? <TrendingRecipe>[]
         : _trendingRecipes
-              .where(
-                (r) => r.name.toLowerCase().contains(
-                  _typingQuery.trim().toLowerCase(),
-                ),
-              )
-              .toList();
+            .where(
+              (r) => r.name.toLowerCase().contains(
+                _typingQuery.trim().toLowerCase(),
+              ),
+            )
+            .toList();
 
     final showDropdown = _typingQuery.trim().isNotEmpty && !_hasSearched;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Search input box
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
@@ -761,36 +574,19 @@ class _HomePageState extends State<HomePage>
             ],
           ),
         ),
-
-        // Suggestion dropdown
         if (showDropdown)
           Container(
             decoration: BoxDecoration(
               color: const Color(0xFF0D2818),
               border: Border(
                 left: BorderSide(
-                  color: const Color.fromARGB(
-                    255,
-                    155,
-                    156,
-                    155,
-                  ).withOpacity(0.8),
+                  color: const Color.fromARGB(255, 155, 156, 155).withOpacity(0.8),
                 ),
                 right: BorderSide(
-                  color: const Color.fromARGB(
-                    255,
-                    155,
-                    156,
-                    155,
-                  ).withOpacity(0.8),
+                  color: const Color.fromARGB(255, 155, 156, 155).withOpacity(0.8),
                 ),
                 bottom: BorderSide(
-                  color: const Color.fromARGB(
-                    255,
-                    155,
-                    156,
-                    155,
-                  ).withOpacity(0.8),
+                  color: const Color.fromARGB(255, 155, 156, 155).withOpacity(0.8),
                 ),
               ),
               borderRadius: const BorderRadius.vertical(
@@ -806,11 +602,7 @@ class _HomePageState extends State<HomePage>
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.search_off,
-                          color: Colors.grey.shade600,
-                          size: 16,
-                        ),
+                        Icon(Icons.search_off, color: Colors.grey.shade600, size: 16),
                         const SizedBox(width: 8),
                         const Text(
                           'No matching recipes found',
@@ -831,7 +623,6 @@ class _HomePageState extends State<HomePage>
                       final r = suggestions[i];
                       return InkWell(
                         onTap: () {
-                          // Tap on suggestion → open detail sheet, clear dropdown
                           setState(() => _typingQuery = '');
                           _searchController.clear();
                           FocusScope.of(context).unfocus();
@@ -905,7 +696,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Stats ────────────────────────────────────────────────────────
+  // ── Stats ──────────────────────────────────────────────────────────
 
   Widget _buildStats() {
     final calorieDisplay = context.watch<CalorieProvider>().displayValue;
@@ -925,7 +716,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Trending header ───────────────────────────────────────────────
+  // ── Trending header ────────────────────────────────────────────────
 
   Widget _buildTrendingHeader() {
     return Row(
@@ -950,7 +741,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Trending body ─────────────────────────────────────────────────
+  // ── Trending body ──────────────────────────────────────────────────
 
   Widget _buildTrendingBody() {
     if (_loadingTrending) {
@@ -1004,7 +795,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Trending card ─────────────────────────────────────────────────
+  // ── Trending card ──────────────────────────────────────────────────
 
   Widget _trendingRecipeCard(TrendingRecipe recipe) {
     final tag = _recipeTag(recipe);
@@ -1022,11 +813,8 @@ class _HomePageState extends State<HomePage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image banner
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               child: Image.asset(
                 _recipeImage(recipe.name),
                 height: 140,
@@ -1127,7 +915,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Detail sheet ──────────────────────────────────────────────────
+  // ── Detail sheet ───────────────────────────────────────────────────
 
   void _showRecipeDetailSheet(TrendingRecipe recipe) {
     final tag = _recipeTag(recipe);
@@ -1164,7 +952,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Search result header ──────────────────────────────────────────
+  // ── Search result header ───────────────────────────────────────────
 
   Widget _buildSearchResultHeader() {
     return Row(
@@ -1186,7 +974,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Search result body ────────────────────────────────────────────
+  // ── Search result body ─────────────────────────────────────────────
 
   Widget _buildSearchResultBody() {
     if (_loadingSearch) {
@@ -1227,7 +1015,6 @@ class _HomePageState extends State<HomePage>
     if (_searchResult == null) return const SizedBox();
 
     final recipe = _searchResult!;
-
     final keyNutrients =
         recipe.nutrition['key_nutrients'] as Map<String, dynamic>?;
     double protein = 0, calories = 0;
@@ -1240,15 +1027,23 @@ class _HomePageState extends State<HomePage>
           calories = (e.value['value'] ?? 0).toDouble();
       }
     }
-    final tag = (protein >= 20 || calories >= 450)
-        ? 'Muscle Gain'
-        : 'Weight Loss';
+    final tag = (protein >= 20 || calories >= 450) ? 'Muscle Gain' : 'Weight Loss';
     final tagColor = tag == 'Muscle Gain' ? Colors.green : Colors.red;
+
+    // Build a TrendingRecipe-like object to pass to cart
+    final syntheticRecipe = TrendingRecipe(
+      id: recipe.name.toLowerCase().replaceAll(' ', '_'),
+      name: recipe.name,
+      calories: calories,
+      proteinG: protein,
+      fatG: 0,
+      carbsG: 0,
+      searchCount: 0,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Summary card with image banner
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFF000302).withOpacity(0.55),
@@ -1258,7 +1053,6 @@ class _HomePageState extends State<HomePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Recipe image
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
@@ -1286,11 +1080,7 @@ class _HomePageState extends State<HomePage>
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.restaurant_menu,
-                          color: Colors.green,
-                          size: 20,
-                        ),
+                        const Icon(Icons.restaurant_menu, color: Colors.green, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -1351,13 +1141,31 @@ class _HomePageState extends State<HomePage>
             ],
           ),
         ),
+        const SizedBox(height: 16),
+
+        // Add to cart button for search result
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _addToCart(syntheticRecipe),
+            icon: const Icon(Icons.add_shopping_cart, size: 18),
+            label: const Text('Add to Cart'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 20),
 
         _buildSectionTitle('Ingredients'),
         const SizedBox(height: 10),
         _buildIngredientsTable(recipe.ingredients),
         const SizedBox(height: 20),
-
         _buildSectionTitle('Instructions'),
         const SizedBox(height: 8),
         _buildInstructionsBox(recipe.instructions),
@@ -1366,7 +1174,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── Shared widgets ────────────────────────────────────────────────
+  // ── Shared widgets (unchanged) ─────────────────────────────────────
 
   Widget _buildIngredientsTable(List<String> ingredients) {
     return Container(
@@ -1647,7 +1455,6 @@ class _TrendingDetailSheetState extends State<_TrendingDetailSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Drag handle
             Center(
               child: Container(
                 width: 40,
@@ -1659,8 +1466,6 @@ class _TrendingDetailSheetState extends State<_TrendingDetailSheet> {
                 ),
               ),
             ),
-
-            // Summary card with image
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF000302).withOpacity(0.55),
@@ -1670,7 +1475,6 @@ class _TrendingDetailSheetState extends State<_TrendingDetailSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image banner
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
@@ -1764,8 +1568,6 @@ class _TrendingDetailSheetState extends State<_TrendingDetailSheet> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Add to cart
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -1791,8 +1593,6 @@ class _TrendingDetailSheetState extends State<_TrendingDetailSheet> {
                 ),
               ),
             ),
-
-            // Ingredients + Instructions (fetched from API)
             if (_loading) ...[
               const Center(
                 child: Padding(
@@ -1817,11 +1617,7 @@ class _TrendingDetailSheetState extends State<_TrendingDetailSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: Colors.grey,
-                      size: 18,
-                    ),
+                    const Icon(Icons.info_outline, color: Colors.grey, size: 18),
                     const SizedBox(width: 8),
                     Text(
                       _error!,

@@ -6,8 +6,8 @@ import os
 if not firebase_admin._apps:
     cred = credentials.Certificate(
         os.getenv(
-            "FIREBASE_SERVICE_ACCOUNT_PATH",
-            "app/database/firebase_key.json"  # already in your project!
+            "FIREBASE_KEY_PATH",
+            "app/database/firebase_key.json"  
         )
     )
     firebase_admin.initialize_app(cred)
