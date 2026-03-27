@@ -588,45 +588,34 @@ class ApiService {
   // ───────────────────────────────────────────────────────────────────────────
 
 
-  static const String _mapBase = '$kBaseUrl/map';
-
+  // FIX: router is registered at /api/v1/map (not /map)
+  static const String _mapBase = '$kBaseUrl/api/v1/map';
+ 
   /// Get real nearby stores via Overpass API (OpenStreetMap)
   static Future<List<NearbyStore>> getNearbyStores(
     double lat,
-    double lng,
-  ) async {
-    final res = await http
-        .post(
-          Uri.parse('$_mapBase/nearby-stores'),
-          headers: _headers,
-          body: jsonEncode({'lat': lat, 'lng': lng, 'radius_m': 3000}),
-        )
-        .timeout(const Duration(seconds: 20));
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      final List stores = data['stores'] ?? [];
-      return stores.map((s) => NearbyStore.fromJson(s)).toList();
-    }
-    throw Exception('Failed to load stores');
-  }
-
-  /// Convert address text → lat/lng via Nominatim
-  static Future<Map<String, dynamic>?> geocodeAddress(String address) async {
+    double lng, {
+    int radiusM = 5000,
+  }) async {
     try {
       final res = await http
-          .get(
-            Uri.parse(
-              '$_mapBase/geocode?address=${Uri.encodeComponent(address)}',
-            ),
+          .post(
+            Uri.parse('$_mapBase/nearby-stores'),
             headers: _headers,
+            body: jsonEncode({'lat': lat, 'lng': lng, 'radius_m': radiusM}),
           )
-          .timeout(const Duration(seconds: 10));
-      if (res.statusCode == 200) return jsonDecode(res.body);
+          .timeout(const Duration(seconds: 20));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final List stores = data['stores'] ?? [];
+        return stores.map((s) => NearbyStore.fromJson(s)).toList();
+      }
     } catch (_) {}
-    return null;
+    // Return empty list — map_screen handles fallback
+    return [];
   }
-
-  /// Convert lat/lng → address string
+ 
+  /// Convert lat/lng to readable address via backend Nominatim
   static Future<String> reverseGeocode(double lat, double lng) async {
     try {
       final res = await http
@@ -641,7 +630,7 @@ class ApiService {
     } catch (_) {}
     return '$lat, $lng';
   }
-
+ 
   /// Place an order — saves to Firestore, clears cart
   static Future<Map<String, dynamic>> placeOrder({
     required NearbyStore store,
@@ -657,14 +646,12 @@ class ApiService {
       'store_name': store.name,
       'store_address': store.address,
       'items': cartItems
-          .map(
-            (i) => {
-              'recipe_id': i.recipeId,
-              'recipe_name': i.recipeName,
-              'quantity': i.quantity,
-              'price_per_item': i.pricePerItem,
-            },
-          )
+          .map((i) => {
+                'recipe_id': i.recipeId,
+                'recipe_name': i.recipeName,
+                'quantity': i.quantity,
+                'price_per_item': i.pricePerItem,
+              })
           .toList(),
       'subtotal': subtotal,
       'delivery_fee': deliveryFee,
@@ -672,7 +659,7 @@ class ApiService {
       'discount': discount,
       if (promoCode != null) 'promo_code': promoCode,
     };
-
+ 
     final res = await http
         .post(
           Uri.parse('$_mapBase/$_userId/place-order'),

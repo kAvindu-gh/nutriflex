@@ -7,8 +7,12 @@ from typing import List, Optional
 from app.database.connection import get_db
 from app.models.map_models import StoreLocation, PlaceOrderRequest
 
-# ── Overpass API — 100% free, no key needed ───────────────────────────────────
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+# ── Overpass mirrors — tried in order until one succeeds ─────────────────────
+OVERPASS_MIRRORS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+]
 
 # ── Nominatim geocoding — 100% free, no key needed ───────────────────────────
 NOMINATIM_URL = "https://nominatim.openstreetmap.org"
@@ -27,82 +31,91 @@ def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return R * 2 * math.asin(math.sqrt(a))
 
 
-async def get_nearby_stores(lat: float, lng: float, radius_m: int = 3000) -> List[StoreLocation]:
+async def get_nearby_stores(lat: float, lng: float, radius_m: int = 5000) -> List[StoreLocation]:
     """
     Query Overpass API for real supermarkets/grocery stores near given coordinates.
-    Falls back to hardcoded stores if API is unreachable.
+    Tries multiple mirrors with a 25s timeout each. Falls back to hardcoded stores
+    only if every mirror fails.
     """
     query = f"""
-    [out:json][timeout:15];
+    [out:json][timeout:25];
     (
       node["shop"="supermarket"](around:{radius_m},{lat},{lng});
       node["shop"="grocery"](around:{radius_m},{lat},{lng});
       node["shop"="convenience"](around:{radius_m},{lat},{lng});
       node["shop"="greengrocer"](around:{radius_m},{lat},{lng});
+      node["shop"="food"](around:{radius_m},{lat},{lng});
     );
     out body;
     """
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.post(
-                OVERPASS_URL,
-                data={"data": query},
-                headers=HEADERS,
-            )
-            resp.raise_for_status()
-            data = resp.json()
 
-        elements = data.get("elements", [])
-        stores: List[StoreLocation] = []
+    last_error = None
+    for mirror in OVERPASS_MIRRORS:
+        try:
+            print(f"Trying Overpass mirror: {mirror}")
+            async with httpx.AsyncClient(timeout=28) as client:
+                resp = await client.post(
+                    mirror,
+                    data={"data": query},
+                    headers=HEADERS,
+                )
+                resp.raise_for_status()
+                data = resp.json()
 
-        for el in elements[:10]:  # cap at 10 stores
-            tags = el.get("tags", {})
-            name = tags.get("name") or tags.get("brand") or "Local Store"
-            store_lat = el.get("lat", lat)
-            store_lng = el.get("lon", lng)
-            distance = _haversine_km(lat, lng, store_lat, store_lng)
+            elements = data.get("elements", [])
+            print(f"Overpass returned {len(elements)} elements from {mirror}")
 
-            # Build address from tags
-            addr_parts = []
-            if tags.get("addr:housenumber"):
-                addr_parts.append(tags["addr:housenumber"])
-            if tags.get("addr:street"):
-                addr_parts.append(tags["addr:street"])
-            if tags.get("addr:city"):
-                addr_parts.append(tags["addr:city"])
-            address = ", ".join(addr_parts) if addr_parts else "Address not available"
+            if not elements:
+                # No stores in this radius — return fallback immediately
+                return _fallback_stores(lat, lng)
 
-            phone = tags.get("phone") or tags.get("contact:phone")
-            hours = tags.get("opening_hours", "Hours not available")
+            stores: List[StoreLocation] = []
+            for el in elements[:10]:
+                tags = el.get("tags", {})
+                name = tags.get("name") or tags.get("brand") or "Local Store"
+                store_lat = el.get("lat", lat)
+                store_lng = el.get("lon", lng)
+                distance = _haversine_km(lat, lng, store_lat, store_lng)
 
-            stores.append(StoreLocation(
-                id=str(el.get("id", uuid.uuid4())),
-                name=name,
-                address=address,
-                lat=store_lat,
-                lng=store_lng,
-                distance_km=round(distance, 1),
-                phone=phone,
-                opening_hours=hours,
-                availability_percent=random.randint(80, 99),
-            ))
+                addr_parts = []
+                if tags.get("addr:housenumber"):
+                    addr_parts.append(tags["addr:housenumber"])
+                if tags.get("addr:street"):
+                    addr_parts.append(tags["addr:street"])
+                if tags.get("addr:city"):
+                    addr_parts.append(tags["addr:city"])
+                address = ", ".join(addr_parts) if addr_parts else "Address not available"
 
-        # Sort by distance
-        stores.sort(key=lambda s: s.distance_km)
+                phone = tags.get("phone") or tags.get("contact:phone")
+                hours = tags.get("opening_hours", "Hours not available")
 
-        if stores:
+                stores.append(StoreLocation(
+                    id=str(el.get("id", uuid.uuid4())),
+                    name=name,
+                    address=address,
+                    lat=store_lat,
+                    lng=store_lng,
+                    distance_km=round(distance, 1),
+                    phone=phone,
+                    opening_hours=hours,
+                    availability_percent=random.randint(80, 99),
+                ))
+
+            stores.sort(key=lambda s: s.distance_km)
+            print(f"Returning {len(stores)} stores from {mirror}")
             return stores
 
-        # Fallback if no stores found in radius
-        return _fallback_stores(lat, lng)
+        except Exception as e:
+            last_error = e
+            print(f"Mirror {mirror} failed: {e} — trying next mirror")
+            continue
 
-    except Exception as e:
-        print(f"Overpass API error: {e} — using fallback stores")
-        return _fallback_stores(lat, lng)
+    print(f"All Overpass mirrors failed. Last error: {last_error} — using fallback stores")
+    return _fallback_stores(lat, lng)
 
 
 def _fallback_stores(lat: float, lng: float) -> List[StoreLocation]:
-    """Hardcoded fallback stores used when Overpass is unreachable."""
+    """Hardcoded fallback stores used when all Overpass mirrors are unreachable."""
     return [
         StoreLocation(
             id="fallback_1",

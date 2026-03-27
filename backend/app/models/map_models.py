@@ -17,7 +17,7 @@ class StoreLocation(BaseModel):
 class NearbyStoresRequest(BaseModel):
     lat: float
     lng: float
-    radius_m: int = 3000  # 3km default
+    radius_m: int = 5000  # 5km default
 
 
 class NearbyStoresResponse(BaseModel):
