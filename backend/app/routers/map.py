@@ -1,112 +1,72 @@
 from fastapi import APIRouter, HTTPException, Query
-from app.services.map_service import MapService
-from app.models.map_models import StoreSelectionRequest, OrderConfirmRequest, UpdateInventoryRequest
+from app.models.map_models import (
+    NearbyStoresRequest,
+    NearbyStoresResponse,
+    PlaceOrderRequest,
+    GeocodingRequest,
+)
+from app.services import map_service
+from app.database.connection import get_db
 
 router = APIRouter(prefix="/map", tags=["Map"])
-map_service = MapService()
 
 
-@router.get("/nearby-stores")
-async def get_nearby_stores(
-    user_id: str = Query(...),
-    latitude: float = Query(...),
-    longitude: float = Query(...),
-    radius_km: float = Query(default=5.0)
+@router.post("/nearby-stores", response_model=NearbyStoresResponse)
+async def get_nearby_stores(req: NearbyStoresRequest):
+    """Get real nearby grocery/supermarket stores via Overpass API."""
+    try:
+        stores = await map_service.get_nearby_stores(req.lat, req.lng, req.radius_m)
+        location_name = await map_service.reverse_geocode(req.lat, req.lng)
+        return NearbyStoresResponse(
+            stores=stores,
+            user_lat=req.lat,
+            user_lng=req.lng,
+            location_name=location_name,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/geocode")
+async def geocode_address(address: str = Query(..., description="Address to geocode")):
+    """Convert a text address to lat/lng coordinates using Nominatim."""
+    result = await map_service.geocode_address(address)
+    if not result:
+        raise HTTPException(status_code=404, detail="Address not found")
+    return result
+
+
+@router.get("/reverse-geocode")
+async def reverse_geocode(
+    lat: float = Query(...),
+    lng: float = Query(...),
 ):
-    """
-    Get nearby stores using Google Maps Distance Matrix API.
-    Returns real driving distance, travel time, and live ingredient availability.
-    """
+    """Convert lat/lng to a human-readable address."""
+    name = await map_service.reverse_geocode(lat, lng)
+    return {"location_name": name, "lat": lat, "lng": lng}
+
+
+@router.post("/{user_id}/place-order")
+async def place_order(user_id: str, req: PlaceOrderRequest):
+    """Place an order — saves to Firestore and clears the cart."""
     try:
-        stores = await map_service.get_nearby_stores(
-            user_id=user_id,
-            user_lat=latitude,
-            user_lng=longitude,
-            radius_km=radius_km
-        )
-        return {"success": True, "stores": stores, "count": len(stores)}
+        result = await map_service.place_order(user_id, req)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/store/{store_id}/availability")
-async def get_store_availability(
-    store_id: str,
-    user_id: str = Query(...)
-):
-    """
-    Get LIVE ingredient availability % for a specific store.
-    """
+@router.get("/{user_id}/orders")
+async def get_user_orders(user_id: str):
+    """Get all past orders for a user."""
     try:
-        availability = await map_service.get_ingredient_availability(
-            store_id=store_id,
-            user_id=user_id
-        )
-        return {"success": True, "store_id": store_id, **availability}
+        db = get_db()
+        docs = db.collection("users").document(user_id)\
+                 .collection("orders")\
+                 .order_by("created_at", direction="DESCENDING")\
+                 .limit(20)\
+                 .stream()
+        orders = [doc.to_dict() for doc in docs]
+        return {"orders": orders}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/directions")
-async def get_directions(
-    origin_lat: float = Query(...),
-    origin_lng: float = Query(...),
-    store_id: str = Query(...)
-):
-    """
-    Get route polyline from user location to store using Google Directions API.
-    Flutter uses this polyline to draw the route on the map.
-    """
-    try:
-        directions = await map_service.get_directions(
-            origin_lat=origin_lat,
-            origin_lng=origin_lng,
-            store_id=store_id
-        )
-        return {"success": True, **directions}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/update-inventory")
-async def update_inventory(request: UpdateInventoryRequest):
-    """
-    Update live inventory for a store in Firestore.
-    Call this whenever a store's stock changes.
-    """
-    try:
-        await map_service.update_store_inventory(
-            store_id=request.store_id,
-            ingredient=request.ingredient,
-            in_stock=request.in_stock,
-            quantity=request.quantity
-        )
-        return {"success": True, "message": "Inventory updated"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/select-store")
-async def select_store(request: StoreSelectionRequest):
-    try:
-        result = await map_service.select_store(
-            user_id=request.user_id,
-            store_id=request.store_id
-        )
-        return {"success": True, "message": "Store selected successfully", **result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/confirm-order")
-async def confirm_order(request: OrderConfirmRequest):
-    try:
-        order = await map_service.confirm_order(
-            user_id=request.user_id,
-            store_id=request.store_id,
-            meal_plan_id=request.meal_plan_id
-        )
-        return {"success": True, "message": "Order placed successfully", "order": order}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-

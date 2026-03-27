@@ -14,8 +14,8 @@ from app.routers import bmi, usda, nutrients
 from app.routers.onboarding_router import router as onboarding_router
 from app.routers.notifications import router as notification_router
 from app.routers import profile
-from app.routers.map import router as map_router
 from app.routers.cart import router as cart_router
+from app.routers.map import router as map_router
 
 
 @asynccontextmanager
@@ -48,8 +48,8 @@ app.include_router(nutrients.router)
 app.include_router(onboarding_router)
 app.include_router(notification_router)
 app.include_router(profile.router, prefix="/api/v1")
-app.include_router(map_router)
 app.include_router(cart_router, prefix="/api/v1")
+app.include_router(map_router, prefix="/api/v1")
 
 # ── Health checks ──────────────────────────────────────────────────────────────
 @app.get("/", tags=["Health"])

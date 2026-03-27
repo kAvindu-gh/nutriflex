@@ -1,37 +1,64 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
 
-class StoreSelectionRequest(BaseModel):
-    user_id: str
-    store_id: str
-
-
-class OrderConfirmRequest(BaseModel):
-    user_id: str
-    store_id: str
-    meal_plan_id: str
-
-
-class UpdateInventoryRequest(BaseModel):
-    store_id: str
-    ingredient: str
-    in_stock: bool
-    quantity: int
-
-
-class StoreResponse(BaseModel):
-    store_id: str
+class StoreLocation(BaseModel):
+    id: str
     name: str
     address: str
-    latitude: float
-    longitude: float
+    lat: float
+    lng: float
     distance_km: float
-    distance_text: str          # e.g. "0.8 km" from Google
-    travel_time_min: int
-    travel_time_text: str       # e.g. "15-20 min" from Google
-    rating: float
-    phone: str
-    opening_hours: str
-    ingredient_availability_percent: float
-    google_maps_url: str        # deep link to open in Google Maps app
+    phone: Optional[str] = None
+    opening_hours: Optional[str] = None
+    availability_percent: int  # random 80-99
+
+
+class NearbyStoresRequest(BaseModel):
+    lat: float
+    lng: float
+    radius_m: int = 3000  # 3km default
+
+
+class NearbyStoresResponse(BaseModel):
+    stores: List[StoreLocation]
+    user_lat: float
+    user_lng: float
+    location_name: str
+
+
+class OrderItem(BaseModel):
+    recipe_id: str
+    recipe_name: str
+    quantity: int
+    price_per_item: float
+
+
+class PlaceOrderRequest(BaseModel):
+    store_id: str
+    store_name: str
+    store_address: str
+    items: List[OrderItem]
+    subtotal: float
+    delivery_fee: float
+    total: float
+    promo_code: Optional[str] = None
+    discount: Optional[float] = 0.0
+
+
+class PlaceOrderResponse(BaseModel):
+    order_id: str
+    status: str
+    store_name: str
+    store_address: str
+    items: List[OrderItem]
+    subtotal: float
+    delivery_fee: float
+    discount: float
+    total: float
+    estimated_delivery: str
+    created_at: str
+
+
+class GeocodingRequest(BaseModel):
+    address: str
