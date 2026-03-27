@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/cart_provider.dart';
+import 'map_screen.dart';
 
 // ── Quantity control button ───────────────────────────────────────────────────
 class _QtyButton extends StatefulWidget {
@@ -833,15 +834,27 @@ class _CartScreenState extends State<CartScreen>
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       child: _AnimatedStoresButton(
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Finding nearby stores... 📍'),
-              backgroundColor: Colors.green.shade700,
-              duration: const Duration(seconds: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          final cart = context.read<CartProvider>();
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, animation, __) => MapScreen(
+                cartItems: cart.items,
+                subtotal: cart.subtotal,
+                deliveryFee: cart.deliveryFee,
+                total: cart.total,
               ),
-              behavior: SnackBarBehavior.floating,
+              transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 1.0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                )),
+                child: child,
+              ),
+              transitionDuration: const Duration(milliseconds: 380),
             ),
           );
         },
