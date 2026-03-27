@@ -585,14 +585,8 @@ class _CartScreenState extends State<CartScreen>
   // ── Header ────────────────────────────────────────────────────────────────
 
   Widget _buildHeader(BuildContext context, CartProvider cart) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0A1F12).withOpacity(0.6),
-        border: Border(
-          bottom: BorderSide(color: Colors.green.withOpacity(0.15)),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
           GestureDetector(
@@ -601,37 +595,27 @@ class _CartScreenState extends State<CartScreen>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.15),
+                color: const Color(0xFF111A13),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.35)),
+                border: Border.all(
+                  color: const Color(0xFF14D97D).withOpacity(0.3),
+                ),
               ),
               child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: Colors.green,
-                size: 18,
+                Icons.arrow_back,
+                color: Color(0xFF14D97D),
+                size: 20,
               ),
             ),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Shopping Cart',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '${cart.itemCount} item(s)',
-                style: const TextStyle(
-                  color: Color(0xFF69F0AE),
-                  fontSize: 13,
-                ),
-              ),
-            ],
+          const SizedBox(width: 16),
+          const Text(
+            'Shopping Cart',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const Spacer(),
           if (cart.items.isNotEmpty)
