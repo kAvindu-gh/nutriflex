@@ -3,10 +3,12 @@ import random
 import math
 import uuid
 import os
+import asyncio
 from datetime import datetime
 from typing import List, Optional
 from app.database.connection import get_db
 from app.models.map_models import StoreLocation, PlaceOrderRequest
+from app.services.notification_service import notify_order_placed
 
 
 # Geoapify API keys - to return nearby stores and map
@@ -234,6 +236,15 @@ async def place_order(user_id: str, req: PlaceOrderRequest) -> dict:
     db.collection("carts").document(user_id).set(
         {"items": [], "updated_at": now}, merge=True
     )
+
+    # Trigger order placed notification (fire and forget)
+    asyncio.create_task(notify_order_placed(
+        user_id=user_id,
+        order_id=order_id,
+        store_name=req.store_name,
+        item_count=len(req.items),
+        total=req.total,
+    ))
 
     return {
         "order_id": order_id,

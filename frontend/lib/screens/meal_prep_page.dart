@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/api_service.dart';
 
 class MealPrepPage extends StatefulWidget {
@@ -193,6 +194,22 @@ class _MealPrepPageState extends State<MealPrepPage>
 
       HapticFeedback.lightImpact();
       _showToast('Meal saved successfully!', isError: false);
+
+      // ── Trigger meal prep updated notification ──
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        ApiService.triggerMealPrepUpdated(
+          userId: uid,
+          rice: _riceKey.currentState!.selectedName!,
+          meat: _meatKey.currentState!.selectedName!,
+          vegetable1: _veg1Key.currentState!.selectedName!,
+          vegetable2: _veg2Key.currentState!.selectedName!,
+          mallum: _mallumKey.currentState!.selectedName!,
+          salad: _saladKey.currentState!.selectedName!,
+          totalCalories: newCalConsumed,
+          totalProtein: newProtConsumed,
+        );
+      }
 
     } catch (e) {
       _showToast('Error: $e', isError: true);

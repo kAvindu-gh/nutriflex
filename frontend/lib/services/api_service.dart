@@ -141,7 +141,6 @@ class ApiResponse<T> {
   final String? error;
 
   const ApiResponse.ok(this.data) : success = true, error = null;
-
   const ApiResponse.err(this.error) : success = false, data = null;
 }
 
@@ -164,10 +163,10 @@ class NotificationItem {
 
   factory NotificationItem.fromData(Map<String, dynamic> data) {
     return NotificationItem(
-      type: data['type'] ?? 'general',
+      type:  data['type']  ?? 'general',
       title: data['title'] ?? '',
-      body: data['body'] ?? '',
-      time: data['time'] ?? 'just now',
+      body:  data['body']  ?? '',
+      time:  data['time']  ?? 'just now',
     );
   }
 }
@@ -185,7 +184,7 @@ class ApiService {
     return uid;
   }
 
-  // ── Internal POST helper for notification endpoints ────────────────────────
+  // ── Internal POST helper ───────────────────────────────────────────────────
   static Future<ApiResponse<Map<String, dynamic>>> _notifPost(
     String path,
     Map<String, dynamic> body,
@@ -234,7 +233,8 @@ class ApiService {
   }) async {
     try {
       final uri = Uri.parse('$kBaseUrl/recipes/trending?limit=$limit');
-      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      final response =
+          await http.get(uri).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> recipesJson = data['recipes'] ?? [];
@@ -251,7 +251,8 @@ class ApiService {
       final uri = Uri.parse(
         '$kBaseUrl/recipes/search?query=${Uri.encodeComponent(query)}',
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 15));
+      final response =
+          await http.get(uri).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         return SearchedRecipe.fromJson(jsonDecode(response.body));
       }
@@ -281,11 +282,11 @@ class ApiService {
           ? recipe.id
           : recipe.name.toLowerCase().replaceAll(' ', '_'),
       'recipe_name': recipe.name,
-      'calories': recipe.calories,
-      'protein_g': recipe.proteinG,
-      'fat_g': recipe.fatG,
-      'carbs_g': recipe.carbsG,
-      'quantity': 1,
+      'calories':    recipe.calories,
+      'protein_g':   recipe.proteinG,
+      'fat_g':       recipe.fatG,
+      'carbs_g':     recipe.carbsG,
+      'quantity':    1,
       'price_per_item': 4.99,
     };
     final res = await http
@@ -327,7 +328,10 @@ class ApiService {
 
   static Future<Map<String, dynamic>> clearCart() async {
     final res = await http
-        .delete(Uri.parse('$_cartBase/$_userId/clear'), headers: _headers)
+        .delete(
+          Uri.parse('$_cartBase/$_userId/clear'),
+          headers: _headers,
+        )
         .timeout(const Duration(seconds: 10));
     if (res.statusCode == 200) return jsonDecode(res.body);
     throw Exception('Failed to clear cart');
@@ -362,7 +366,8 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) return jsonDecode(response.body);
-      final detail = jsonDecode(response.body)['detail'] ?? 'Unknown error';
+      final detail =
+          jsonDecode(response.body)['detail'] ?? 'Unknown error';
       throw Exception(detail);
     } catch (e) {
       throw Exception('$e');
@@ -374,45 +379,42 @@ class ApiService {
   // ───────────────────────────────────────────────────────────────────────────
 
   static Future<Map<String, dynamic>> saveMealPrep({
-    required String rice,
-    required int riceSize,
-    required String meat,
-    required int meatSize,
-    required String vegetable1,
-    required int vegetable1Size,
-    required String vegetable2,
-    required int vegetable2Size,
-    required String mallum,
-    required int mallumSize,
-    required String salad,
-    required int saladSize,
+    required String rice,        required int riceSize,
+    required String meat,        required int meatSize,
+    required String vegetable1,  required int vegetable1Size,
+    required String vegetable2,  required int vegetable2Size,
+    required String mallum,      required int mallumSize,
+    required String salad,       required int saladSize,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('User not logged in');
 
-    final uri = Uri.parse('$kBaseUrl/Meal_Prep_With_Five_Cards').replace(
+    final uri =
+        Uri.parse('$kBaseUrl/Meal_Prep_With_Five_Cards').replace(
       queryParameters: {
-        'access_token': user.uid,
-        'rice': rice,
-        'rice_size': riceSize.toString(),
-        'meat': meat,
-        'meat_size': meatSize.toString(),
-        'vegetable1': vegetable1,
+        'access_token':    user.uid,
+        'rice':            rice,
+        'rice_size':       riceSize.toString(),
+        'meat':            meat,
+        'meat_size':       meatSize.toString(),
+        'vegetable1':      vegetable1,
         'vegetable1_size': vegetable1Size.toString(),
-        'vegetable2': vegetable2,
+        'vegetable2':      vegetable2,
         'vegetable2_size': vegetable2Size.toString(),
-        'mallum': mallum,
-        'mallum_size': mallumSize.toString(),
-        'salad': salad,
-        'salad_size': saladSize.toString(),
+        'mallum':          mallum,
+        'mallum_size':     mallumSize.toString(),
+        'salad':           salad,
+        'salad_size':      saladSize.toString(),
       },
     );
 
-    final response = await http.post(uri).timeout(const Duration(seconds: 15));
+    final response =
+        await http.post(uri).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) return jsonDecode(response.body);
     if (response.body.isEmpty)
       throw Exception('Server error (${response.statusCode})');
-    final detail = jsonDecode(response.body)['detail'] ?? 'Unknown error';
+    final detail =
+        jsonDecode(response.body)['detail'] ?? 'Unknown error';
     throw Exception(detail);
   }
 
@@ -479,7 +481,91 @@ class ApiService {
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-  // NOTIFICATIONS
+  // MAP
+  // ───────────────────────────────────────────────────────────────────────────
+
+  static const String _mapBase = '$kBaseUrl/api/v1/map';
+
+  static Future<List<NearbyStore>> getNearbyStores(
+    double lat,
+    double lng, {
+    int radiusM = 5000,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$_mapBase/nearby-stores'),
+            headers: _headers,
+            body: jsonEncode(
+                {'lat': lat, 'lng': lng, 'radius_m': radiusM}),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final List stores = data['stores'] ?? [];
+        return stores.map((s) => NearbyStore.fromJson(s)).toList();
+      }
+    } catch (e) {
+      print('getNearbyStores error: $e');
+    }
+    return [];
+  }
+
+  static Future<String> reverseGeocode(double lat, double lng) async {
+    try {
+      final res = await http
+          .get(
+            Uri.parse('$_mapBase/reverse-geocode?lat=$lat&lng=$lng'),
+            headers: _headers,
+          )
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body)['location_name'] ?? '$lat, $lng';
+      }
+    } catch (_) {}
+    return '$lat, $lng';
+  }
+
+  static Future<Map<String, dynamic>> placeOrder({
+    required NearbyStore store,
+    required List<CartItem> cartItems,
+    required double subtotal,
+    required double deliveryFee,
+    required double total,
+    double discount = 0,
+    String? promoCode,
+  }) async {
+    final body = {
+      'store_id':      store.id,
+      'store_name':    store.name,
+      'store_address': store.address,
+      'items': cartItems
+          .map((i) => {
+                'recipe_id':      i.recipeId,
+                'recipe_name':    i.recipeName,
+                'quantity':       i.quantity,
+                'price_per_item': i.pricePerItem,
+              })
+          .toList(),
+      'subtotal':     subtotal,
+      'delivery_fee': deliveryFee,
+      'total':        total,
+      'discount':     discount,
+      if (promoCode != null) 'promo_code': promoCode,
+    };
+    final res = await http
+        .post(
+          Uri.parse('$_mapBase/$_userId/place-order'),
+          headers: _headers,
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 15));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to place order: ${res.statusCode}');
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // NOTIFICATIONS — FCM legacy triggers
   // ───────────────────────────────────────────────────────────────────────────
 
   static Future<bool> isBackendReachable() async {
@@ -496,54 +582,59 @@ class ApiService {
   static Future<ApiResponse<Map<String, dynamic>>> registerToken({
     required String userId,
     required String fcmToken,
-  }) => _notifPost('/notifications/register-token', {
-    'user_id': userId,
-    'fcm_token': fcmToken,
-  });
+  }) =>
+      _notifPost('/notifications/register-token', {
+        'user_id':   userId,
+        'fcm_token': fcmToken,
+      });
 
   static Future<ApiResponse<Map<String, dynamic>>> notifyAddToCart({
     required String userId,
     required String ingredientName,
     String? recipeName,
-  }) => _notifPost('/notifications/add-to-cart', {
-    'user_id': userId,
-    'ingredient_name': ingredientName,
-    if (recipeName != null) 'recipe_name': recipeName,
-  });
+  }) =>
+      _notifPost('/notifications/add-to-cart', {
+        'user_id':         userId,
+        'ingredient_name': ingredientName,
+        if (recipeName != null) 'recipe_name': recipeName,
+      });
 
   static Future<ApiResponse<Map<String, dynamic>>> notifySaveRecipe({
     required String userId,
     required String recipeName,
     required String recipeId,
-  }) => _notifPost('/notifications/save-recipe', {
-    'user_id': userId,
-    'recipe_name': recipeName,
-    'recipe_id': recipeId,
-  });
+  }) =>
+      _notifPost('/notifications/save-recipe', {
+        'user_id':     userId,
+        'recipe_name': recipeName,
+        'recipe_id':   recipeId,
+      });
 
   static Future<ApiResponse<Map<String, dynamic>>> notifyTrendingRecipe({
     required String userId,
     required String recipeName,
     required String recipeId,
     int? trendingRank,
-  }) => _notifPost('/notifications/trending-recipe', {
-    'user_id': userId,
-    'recipe_name': recipeName,
-    'recipe_id': recipeId,
-    if (trendingRank != null) 'trending_rank': trendingRank,
-  });
+  }) =>
+      _notifPost('/notifications/trending-recipe', {
+        'user_id':     userId,
+        'recipe_name': recipeName,
+        'recipe_id':   recipeId,
+        if (trendingRank != null) 'trending_rank': trendingRank,
+      });
 
   static Future<ApiResponse<Map<String, dynamic>>> notifyOrderConfirmed({
     required String userId,
     required String orderId,
     required String storeName,
     required int itemCount,
-  }) => _notifPost('/notifications/order-confirmed', {
-    'user_id': userId,
-    'order_id': orderId,
-    'store_name': storeName,
-    'item_count': itemCount,
-  });
+  }) =>
+      _notifPost('/notifications/order-confirmed', {
+        'user_id':    userId,
+        'order_id':   orderId,
+        'store_name': storeName,
+        'item_count': itemCount,
+      });
 
   static Future<ApiResponse<Map<String, dynamic>>> notifyFitnessDetails({
     required String userId,
@@ -551,13 +642,14 @@ class ApiService {
     int? steps,
     String? workoutName,
     bool goalReached = false,
-  }) => _notifPost('/notifications/fitness-details', {
-    'user_id': userId,
-    if (caloriesBurned != null) 'calories_burned': caloriesBurned,
-    if (steps != null) 'steps': steps,
-    if (workoutName != null) 'workout_name': workoutName,
-    'goal_reached': goalReached,
-  });
+  }) =>
+      _notifPost('/notifications/fitness-details', {
+        'user_id': userId,
+        if (caloriesBurned != null) 'calories_burned': caloriesBurned,
+        if (steps != null) 'steps': steps,
+        if (workoutName != null) 'workout_name': workoutName,
+        'goal_reached': goalReached,
+      });
 
   static Future<ApiResponse<Map<String, dynamic>>> notifyWeeklyProgress({
     required String userId,
@@ -565,108 +657,213 @@ class ApiService {
     double? caloriesAvg,
     int? workoutsCompleted,
     bool goalAchieved = false,
-  }) => _notifPost('/notifications/weekly-progress', {
-    'user_id': userId,
-    'week_number': weekNumber,
-    if (caloriesAvg != null) 'calories_avg': caloriesAvg,
-    if (workoutsCompleted != null) 'workouts_completed': workoutsCompleted,
-    'goal_achieved': goalAchieved,
-  });
+  }) =>
+      _notifPost('/notifications/weekly-progress', {
+        'user_id':     userId,
+        'week_number': weekNumber,
+        if (caloriesAvg != null) 'calories_avg': caloriesAvg,
+        if (workoutsCompleted != null)
+          'workouts_completed': workoutsCompleted,
+        'goal_achieved': goalAchieved,
+      });
 
   static Future<ApiResponse<Map<String, dynamic>>> broadcast({
     required String title,
     required String body,
     required String notificationType,
-  }) => _notifPost('/notifications/broadcast', {
-    'title': title,
-    'body': body,
-    'notification_type': notificationType,
-  });
+  }) =>
+      _notifPost('/notifications/broadcast', {
+        'title':             title,
+        'body':              body,
+        'notification_type': notificationType,
+      });
 
   // ───────────────────────────────────────────────────────────────────────────
-  //  MAP
+  // NOTIFICATIONS — Fetch, mark read, clear
   // ───────────────────────────────────────────────────────────────────────────
 
-  static const String _mapBase = '$kBaseUrl/api/v1/map';
- 
-  // ── Nearby stores via Geoapify (called through backend) ───────────────────
-  static Future<List<NearbyStore>> getNearbyStores(
-    double lat,
-    double lng, {
-    int radiusM = 5000,
-  }) async {
-    try {
-      final res = await http
-          .post(
-            Uri.parse('$_mapBase/nearby-stores'),
-            headers: _headers,
-            body: jsonEncode({'lat': lat, 'lng': lng, 'radius_m': radiusM}),
-          )
-          .timeout(const Duration(seconds: 15));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final List stores = data['stores'] ?? [];
-        return stores.map((s) => NearbyStore.fromJson(s)).toList();
-      }
-    } catch (e) {
-      print('getNearbyStores error: $e');
-    }
-    return []; // map_screen handles empty with its own fallback
-  }
- 
-  // ── Reverse geocode via backend Nominatim ─────────────────────────────────
-  static Future<String> reverseGeocode(double lat, double lng) async {
-    try {
-      final res = await http
-          .get(
-            Uri.parse('$_mapBase/reverse-geocode?lat=$lat&lng=$lng'),
-            headers: _headers,
-          )
-          .timeout(const Duration(seconds: 10));
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body)['location_name'] ?? '$lat, $lng';
-      }
-    } catch (_) {}
-    return '$lat, $lng';
-  }
- 
-  // ── Place order — saves to Firestore, clears cart ─────────────────────────
-  static Future<Map<String, dynamic>> placeOrder({
-    required NearbyStore store,
-    required List<CartItem> cartItems,
-    required double subtotal,
-    required double deliveryFee,
-    required double total,
-    double discount = 0,
-    String? promoCode,
-  }) async {
-    final body = {
-      'store_id': store.id,
-      'store_name': store.name,
-      'store_address': store.address,
-      'items': cartItems
-          .map((i) => {
-                'recipe_id': i.recipeId,
-                'recipe_name': i.recipeName,
-                'quantity': i.quantity,
-                'price_per_item': i.pricePerItem,
-              })
-          .toList(),
-      'subtotal': subtotal,
-      'delivery_fee': deliveryFee,
-      'total': total,
-      'discount': discount,
-      if (promoCode != null) 'promo_code': promoCode,
-    };
- 
+  static Future<Map<String, dynamic>> getNotifications(
+      String userId) async {
     final res = await http
-        .post(
-          Uri.parse('$_mapBase/$_userId/place-order'),
+        .get(
+          Uri.parse('$kBaseUrl/notifications/$userId'),
           headers: _headers,
-          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to load notifications');
+  }
+
+  static Future<void> markNotificationRead(
+    String userId,
+    String notificationId,
+  ) async {
+    await http
+        .patch(
+          Uri.parse(
+              '$kBaseUrl/notifications/$userId/$notificationId/read'),
+          headers: _headers,
+        )
+        .timeout(const Duration(seconds: 10));
+  }
+
+  static Future<void> markAllNotificationsRead(String userId) async {
+    await http
+        .patch(
+          Uri.parse('$kBaseUrl/notifications/$userId/read-all'),
+          headers: _headers,
+        )
+        .timeout(const Duration(seconds: 10));
+  }
+
+  static Future<void> clearAllNotifications(String userId) async {
+    await http
+        .delete(
+          Uri.parse('$kBaseUrl/notifications/$userId/clear-all'),
+          headers: _headers,
+        )
+        .timeout(const Duration(seconds: 10));
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // NOTIFICATIONS — New real-time trigger methods
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /// Call after a user successfully searches a recipe
+  static Future<void> triggerRecipeSearched({
+    required String userId,
+    required String recipeName,
+    double? calories,
+    double? protein,
+  }) async {
+    try {
+      await http
+          .post(
+            Uri.parse('$kBaseUrl/notifications/recipe-searched'),
+            headers: _headers,
+            body: jsonEncode({
+              'user_id':     userId,
+              'recipe_name': recipeName,
+              if (calories != null) 'calories': calories,
+              if (protein  != null) 'protein':  protein,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {}
+  }
+
+  /// Call when user taps "Update My Recipe" on meal prep page
+  static Future<void> triggerMealPrepUpdated({
+    required String userId,
+    required String rice,
+    required String meat,
+    required String vegetable1,
+    required String vegetable2,
+    required String mallum,
+    required String salad,
+    double? totalCalories,
+    double? totalProtein,
+  }) async {
+    try {
+      await http
+          .post(
+            Uri.parse('$kBaseUrl/notifications/meal-prep-updated'),
+            headers: _headers,
+            body: jsonEncode({
+              'user_id':    userId,
+              'rice':       rice,
+              'meat':       meat,
+              'vegetable1': vegetable1,
+              'vegetable2': vegetable2,
+              'mallum':     mallum,
+              'salad':      salad,
+              if (totalCalories != null) 'total_calories': totalCalories,
+              if (totalProtein  != null) 'total_protein':  totalProtein,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {}
+  }
+
+  /// Call after BMI is calculated
+  static Future<void> triggerBmiCalculated({
+    required String userId,
+    required double bmi,
+    required String status,
+    required double weight,
+    required double height,
+    String? goal,
+  }) async {
+    try {
+      await http
+          .post(
+            Uri.parse('$kBaseUrl/notifications/bmi-calculated'),
+            headers: _headers,
+            body: jsonEncode({
+              'user_id': userId,
+              'bmi':     bmi,
+              'status':  status,
+              'weight':  weight,
+              'height':  height,
+              if (goal != null) 'goal': goal,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {}
+  }
+
+  /// Call after order is placed from map page
+  static Future<void> triggerOrderPlaced({
+    required String userId,
+    required String orderId,
+    required String storeName,
+    required int    itemCount,
+    required double total,
+  }) async {
+    try {
+      await http
+          .post(
+            Uri.parse('$kBaseUrl/notifications/order-placed'),
+            headers: _headers,
+            body: jsonEncode({
+              'user_id':    userId,
+              'order_id':   orderId,
+              'store_name': storeName,
+              'item_count': itemCount,
+              'total':      total,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {}
+  }
+
+  /// Call when user adds a recipe to cart
+  static Future<void> triggerAddToCartNotification({
+    required String userId,
+    required String recipeName,
+  }) async {
+    try {
+      await notifyAddToCart(
+        userId:          userId,
+        ingredientName:  recipeName,
+        recipeName:      recipeName,
+      );
+    } catch (_) {}
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // SUMMARY
+  // ───────────────────────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> getUserSummary(
+      String userId) async {
+    final res = await http
+        .get(
+          Uri.parse('$kBaseUrl/api/v1/summary/$userId'),
+          headers: _headers,
         )
         .timeout(const Duration(seconds: 15));
     if (res.statusCode == 200) return jsonDecode(res.body);
-    throw Exception('Failed to place order: ${res.statusCode}');
+    throw Exception('Failed to load summary');
   }
 }

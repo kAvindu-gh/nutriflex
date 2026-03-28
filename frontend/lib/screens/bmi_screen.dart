@@ -183,6 +183,19 @@ class _BMIScreenState extends State<BMIScreen> {
         context.read<CalorieProvider>().setDailyCalories(result.dailyCalories);
       }
 
+      // ── Trigger BMI calculated notification ──
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        ApiService.triggerBmiCalculated(
+          userId: uid,
+          bmi: result.bmi,
+          status: result.category,
+          weight: w,
+          height: h,
+          goal: _goal,
+        );
+      }
+
       Future.delayed(const Duration(milliseconds: 120), () {
         if (_resultsKey.currentContext != null) {
           Scrollable.ensureVisible(

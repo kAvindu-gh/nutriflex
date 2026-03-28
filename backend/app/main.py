@@ -16,6 +16,7 @@ from app.routers.notifications import router as notification_router
 from app.routers import profile
 from app.routers.cart import router as cart_router
 from app.routers.map import router as map_router
+from app.routers.summary_router import router as summary_router
 
 
 @asynccontextmanager
@@ -50,6 +51,7 @@ app.include_router(notification_router)
 app.include_router(profile.router, prefix="/api/v1")
 app.include_router(cart_router, prefix="/api/v1")
 app.include_router(map_router, prefix="/api/v1")
+app.include_router(summary_router, prefix="/api/v1")
 
 # ── Health checks ──────────────────────────────────────────────────────────────
 @app.get("/", tags=["Health"])

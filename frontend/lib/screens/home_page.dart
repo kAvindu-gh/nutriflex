@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/api_service.dart';
 import '../services/calorie_provider_service.dart';
 import '../services/cart_provider.dart';
@@ -123,9 +124,12 @@ class _PulsingStatCardState extends State<_PulsingStatCard>
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(207, 25, 66, 45).withOpacity(
-                glowOpacity,
-              ),
+              color: const Color.fromARGB(
+                207,
+                25,
+                66,
+                45,
+              ).withOpacity(glowOpacity),
               border: Border.all(
                 color: Colors.green.withOpacity(borderOpacity),
                 width: 1.5,
@@ -222,39 +226,80 @@ class _HomePageState extends State<HomePage>
   String _recipeImage(String name, {bool isSearchResult = false}) {
     if (isSearchResult) return 'lib/assets/grilled_chicken.jpg';
     final n = name.toLowerCase();
-    if (n.contains('beef') || n.contains('stew') || n.contains('burger') ||
-        n.contains('meatball') || n.contains('meatloaf') || n.contains('steak'))
+    if (n.contains('beef') ||
+        n.contains('stew') ||
+        n.contains('burger') ||
+        n.contains('meatball') ||
+        n.contains('meatloaf') ||
+        n.contains('steak'))
       return 'lib/assets/beef_stew.jpg';
     if (n.contains('chicken') || n.contains('turkey') || n.contains('poultry'))
       return 'lib/assets/grilled_chicken.jpg';
-    if (n.contains('fish') || n.contains('salmon') || n.contains('tuna') ||
-        n.contains('shrimp') || n.contains('prawn') || n.contains('seafood') ||
-        n.contains('crab') || n.contains('lobster') || n.contains('tilapia'))
+    if (n.contains('fish') ||
+        n.contains('salmon') ||
+        n.contains('tuna') ||
+        n.contains('shrimp') ||
+        n.contains('prawn') ||
+        n.contains('seafood') ||
+        n.contains('crab') ||
+        n.contains('lobster') ||
+        n.contains('tilapia'))
       return 'lib/assets/fish_pate.jpg';
-    if (n.contains('pasta') || n.contains('spaghetti') || n.contains('lasagna') ||
-        n.contains('fettuccine') || n.contains('penne') || n.contains('macaroni') ||
+    if (n.contains('pasta') ||
+        n.contains('spaghetti') ||
+        n.contains('lasagna') ||
+        n.contains('fettuccine') ||
+        n.contains('penne') ||
+        n.contains('macaroni') ||
         n.contains('ramen'))
       return 'lib/assets/pasta.jpg';
-    if (n.contains('salad') || n.contains('coleslaw') || n.contains('slaw') ||
+    if (n.contains('salad') ||
+        n.contains('coleslaw') ||
+        n.contains('slaw') ||
         n.contains('noodle'))
       return 'lib/assets/noodles.jpg';
-    if (n.contains('soup') || n.contains('broth') || n.contains('chowder') ||
-        n.contains('bisque') || n.contains('chili'))
+    if (n.contains('soup') ||
+        n.contains('broth') ||
+        n.contains('chowder') ||
+        n.contains('bisque') ||
+        n.contains('chili'))
       return 'lib/assets/lentil_soup.jpg';
-    if (n.contains('rice') || n.contains('pilaf') || n.contains('risotto') ||
-        n.contains('fried rice') || n.contains('biryani') || n.contains('grain'))
+    if (n.contains('rice') ||
+        n.contains('pilaf') ||
+        n.contains('risotto') ||
+        n.contains('fried rice') ||
+        n.contains('biryani') ||
+        n.contains('grain'))
       return 'lib/assets/fried_rice.jpg';
-    if (n.contains('egg') || n.contains('pancake') || n.contains('waffle') ||
-        n.contains('omelette') || n.contains('omelet') || n.contains('breakfast') ||
-        n.contains('oatmeal') || n.contains('toast') || n.contains('bacon'))
+    if (n.contains('egg') ||
+        n.contains('pancake') ||
+        n.contains('waffle') ||
+        n.contains('omelette') ||
+        n.contains('omelet') ||
+        n.contains('breakfast') ||
+        n.contains('oatmeal') ||
+        n.contains('toast') ||
+        n.contains('bacon'))
       return 'lib/assets/cuttlefish.jpg';
-    if (n.contains('cake') || n.contains('cookie') || n.contains('brownie') ||
-        n.contains('pie') || n.contains('pudding') || n.contains('dessert') ||
-        n.contains('ice cream') || n.contains('chocolate') || n.contains('muffin'))
+    if (n.contains('cake') ||
+        n.contains('cookie') ||
+        n.contains('brownie') ||
+        n.contains('pie') ||
+        n.contains('pudding') ||
+        n.contains('dessert') ||
+        n.contains('ice cream') ||
+        n.contains('chocolate') ||
+        n.contains('muffin'))
       return 'lib/assets/seafood_cake.jpg';
-    if (n.contains('pizza') || n.contains('vegan') || n.contains('tofu') ||
-        n.contains('lentil') || n.contains('bean') || n.contains('vegetable') ||
-        n.contains('mushroom') || n.contains('spinach') || n.contains('broccoli'))
+    if (n.contains('pizza') ||
+        n.contains('vegan') ||
+        n.contains('tofu') ||
+        n.contains('lentil') ||
+        n.contains('bean') ||
+        n.contains('vegetable') ||
+        n.contains('mushroom') ||
+        n.contains('spinach') ||
+        n.contains('broccoli'))
       return 'lib/assets/cheese_pizza.jpg';
     if (n.contains('mutton')) return 'lib/assets/mutton_curry.jpg';
     if (n.contains('pork')) return 'lib/assets/pork_marinade.jpg';
@@ -310,10 +355,13 @@ class _HomePageState extends State<HomePage>
         pageBuilder: (_, animation, __) => const CartScreen(),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            position:
+                Tween<Offset>(
+                  begin: const Offset(1.0, 0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
             child: child,
           );
         },
@@ -359,6 +407,31 @@ class _HomePageState extends State<HomePage>
         _searchResult = result;
         _loadingSearch = false;
       });
+
+      // Extract calories and protein from the result
+      final keyNutrients =
+          result.nutrition['key_nutrients'] as Map<String, dynamic>?;
+      double protein = 0, calories = 0;
+      if (keyNutrients != null) {
+        for (final e in keyNutrients.entries) {
+          if (e.key.toLowerCase().contains('protein'))
+            protein = (e.value['value'] ?? 0).toDouble();
+          if (e.key.toLowerCase().contains('energy') ||
+              e.key.toLowerCase().contains('calorie'))
+            calories = (e.value['value'] ?? 0).toDouble();
+        }
+      }
+
+      // Trigger recipe searched event
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        ApiService.triggerRecipeSearched(
+          userId: userId,
+          recipeName: result.name,
+          calories: calories,
+          protein: protein,
+        );
+      }
     } catch (e) {
       setState(() {
         _searchError = 'Recipe not found. Try another name.';
@@ -517,12 +590,12 @@ class _HomePageState extends State<HomePage>
     final suggestions = _typingQuery.trim().isEmpty
         ? <TrendingRecipe>[]
         : _trendingRecipes
-            .where(
-              (r) => r.name.toLowerCase().contains(
-                _typingQuery.trim().toLowerCase(),
-              ),
-            )
-            .toList();
+              .where(
+                (r) => r.name.toLowerCase().contains(
+                  _typingQuery.trim().toLowerCase(),
+                ),
+              )
+              .toList();
 
     final showDropdown = _typingQuery.trim().isNotEmpty && !_hasSearched;
 
@@ -580,13 +653,28 @@ class _HomePageState extends State<HomePage>
               color: const Color(0xFF0D2818),
               border: Border(
                 left: BorderSide(
-                  color: const Color.fromARGB(255, 155, 156, 155).withOpacity(0.8),
+                  color: const Color.fromARGB(
+                    255,
+                    155,
+                    156,
+                    155,
+                  ).withOpacity(0.8),
                 ),
                 right: BorderSide(
-                  color: const Color.fromARGB(255, 155, 156, 155).withOpacity(0.8),
+                  color: const Color.fromARGB(
+                    255,
+                    155,
+                    156,
+                    155,
+                  ).withOpacity(0.8),
                 ),
                 bottom: BorderSide(
-                  color: const Color.fromARGB(255, 155, 156, 155).withOpacity(0.8),
+                  color: const Color.fromARGB(
+                    255,
+                    155,
+                    156,
+                    155,
+                  ).withOpacity(0.8),
                 ),
               ),
               borderRadius: const BorderRadius.vertical(
@@ -602,7 +690,11 @@ class _HomePageState extends State<HomePage>
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.search_off, color: Colors.grey.shade600, size: 16),
+                        Icon(
+                          Icons.search_off,
+                          color: Colors.grey.shade600,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         const Text(
                           'No matching recipes found',
@@ -814,7 +906,9 @@ class _HomePageState extends State<HomePage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: Image.asset(
                 _recipeImage(recipe.name),
                 height: 140,
@@ -1027,7 +1121,9 @@ class _HomePageState extends State<HomePage>
           calories = (e.value['value'] ?? 0).toDouble();
       }
     }
-    final tag = (protein >= 20 || calories >= 450) ? 'Muscle Gain' : 'Weight Loss';
+    final tag = (protein >= 20 || calories >= 450)
+        ? 'Muscle Gain'
+        : 'Weight Loss';
     final tagColor = tag == 'Muscle Gain' ? Colors.green : Colors.red;
 
     // Build a TrendingRecipe-like object to pass to cart
@@ -1080,7 +1176,11 @@ class _HomePageState extends State<HomePage>
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.restaurant_menu, color: Colors.green, size: 20),
+                        const Icon(
+                          Icons.restaurant_menu,
+                          color: Colors.green,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -1617,7 +1717,11 @@ class _TrendingDetailSheetState extends State<_TrendingDetailSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Colors.grey, size: 18),
+                    const Icon(
+                      Icons.info_outline,
+                      color: Colors.grey,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       _error!,

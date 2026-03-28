@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
+import 'user_summary_section.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -51,29 +52,36 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.initState();
 
     _fadeController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700));
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
     _slideController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     _avatarController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
     _staggerController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1000));
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
 
-    _fadeAnim =
-        CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
+    _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.06),
       end: Offset.zero,
-    ).animate(
-        CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
 
     _avatarScaleAnim = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _avatarController, curve: Curves.elasticOut),
     );
     _avatarFadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-          parent: _avatarController,
-          curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
+        parent: _avatarController,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
     );
 
     _rowSlideAnims = List.generate(6, (i) {
@@ -82,10 +90,12 @@ class _ProfileScreenState extends State<ProfileScreen>
       return Tween<Offset>(
         begin: const Offset(0.08, 0),
         end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: _staggerController,
-        curve: Interval(start, end, curve: Curves.easeOut),
-      ));
+      ).animate(
+        CurvedAnimation(
+          parent: _staggerController,
+          curve: Interval(start, end, curve: Curves.easeOut),
+        ),
+      );
     });
 
     _rowFadeAnims = List.generate(6, (i) {
@@ -114,7 +124,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // ── Load profile using Firebase Auth current user ─────────────────────────
   Future<void> _loadProfile() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       _userId = "lDbTtG0CgdO7aDvFzZIl8UqXJFF3";
       final data = await ApiService.getProfile(_userId!);
@@ -167,11 +180,16 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   String _fieldLabel(String field) {
     switch (field) {
-      case 'mobile':          return 'Mobile';
-      case 'birthday':        return 'Birthday';
-      case 'gender':          return 'Gender';
-      case 'profile_pic_url': return 'Profile picture';
-      default:                return field;
+      case 'mobile':
+        return 'Mobile';
+      case 'birthday':
+        return 'Birthday';
+      case 'gender':
+        return 'Gender';
+      case 'profile_pic_url':
+        return 'Profile picture';
+      default:
+        return field;
     }
   }
 
@@ -209,18 +227,22 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       backgroundColor: const Color(0xFF181818),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _sheetHandle(),
-            const Text("Profile Picture",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
+            const Text(
+              "Profile Picture",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -228,8 +250,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 backgroundColor: Color(0xFF1A3A26),
                 child: Icon(Icons.photo_library_outlined, color: kGreen),
               ),
-              title: const Text("Change photo",
-                  style: TextStyle(color: Colors.white)),
+              title: const Text(
+                "Change photo",
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () async {
                 Navigator.pop(ctx);
                 await _pickFromGallery();
@@ -241,8 +265,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 backgroundColor: Color(0xFF2A1010),
                 child: Icon(Icons.delete_outline, color: Colors.redAccent),
               ),
-              title: const Text("Remove photo",
-                  style: TextStyle(color: Colors.redAccent)),
+              title: const Text(
+                "Remove photo",
+                style: TextStyle(color: Colors.redAccent),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _confirmDelete(
@@ -267,8 +293,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (picked == null) return;
     _showToast("Uploading...", isSuccess: true);
     try {
-      final data =
-          await ApiService.uploadProfilePicture(_userId!, File(picked.path));
+      final data = await ApiService.uploadProfilePicture(
+        _userId!,
+        File(picked.path),
+      );
       _applyProfileData(data);
       _showToast("Profile picture updated", isSuccess: true);
     } catch (e) {
@@ -276,13 +304,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  void _confirmDelete(
-      {required String label, required VoidCallback onConfirm}) {
+  void _confirmDelete({
+    required String label,
+    required VoidCallback onConfirm,
+  }) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF181818),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: Column(
@@ -290,24 +321,33 @@ class _ProfileScreenState extends State<ProfileScreen>
           children: [
             _sheetHandle(),
             Container(
-              width: 64, height: 64,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
                 color: Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.delete_forever_outlined,
-                  color: Colors.redAccent, size: 32),
+              child: const Icon(
+                Icons.delete_forever_outlined,
+                color: Colors.redAccent,
+                size: 32,
+              ),
             ),
             const SizedBox(height: 16),
-            Text("Remove $label?",
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              "Remove $label?",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text("This will permanently clear your $label.",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            Text(
+              "This will permanently clear your $label.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            ),
             const SizedBox(height: 28),
             Row(
               children: [
@@ -317,11 +357,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white24),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Cancel",
-                        style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -334,11 +377,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Remove",
-                        style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      "Remove",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],
@@ -352,10 +398,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFF000302),
@@ -364,17 +412,16 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Positioned.fill(child: CustomPaint(painter: _RadialBgPainter())),
           _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: kGreen))
+              ? const Center(child: CircularProgressIndicator(color: kGreen))
               : _error != null
-                  ? _buildErrorState()
-                  : FadeTransition(
-                      opacity: _fadeAnim,
-                      child: SlideTransition(
-                        position: _slideAnim,
-                        child: _buildBody(),
-                      ),
-                    ),
+              ? _buildErrorState()
+              : FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: _buildBody(),
+                  ),
+                ),
         ],
       ),
     );
@@ -396,8 +443,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             stretchModes: const [StretchMode.zoomBackground],
             background: _buildHeaderBackground(),
           ),
-          bottom: PreferredSize(
-              preferredSize: Size.zero, child: Container()),
+          bottom: PreferredSize(preferredSize: Size.zero, child: Container()),
           title: const SizedBox.shrink(),
           leading: _buildBackButton(),
         ),
@@ -409,13 +455,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               _buildSectionLabel("YOUR INFORMATION"),
               const SizedBox(height: 12),
               _buildInfoCard(),
+              const UserSummarySection(), // ← add this
               const SizedBox(height: 36),
               _buildLogoutButton(),
               const SizedBox(height: 16),
               Center(
-                child: Text("App Version 0.1",
-                    style: TextStyle(
-                        color: Colors.grey.shade800, fontSize: 12)),
+                child: Text(
+                  "App Version 0.1",
+                  style: TextStyle(color: Colors.grey.shade800, fontSize: 12),
+                ),
               ),
               const SizedBox(height: 48),
             ],
@@ -431,10 +479,13 @@ class _ProfileScreenState extends State<ProfileScreen>
       children: [
         Container(color: Colors.transparent),
         Positioned(
-          top: 40, left: 0, right: 0,
+          top: 40,
+          left: 0,
+          right: 0,
           child: Center(
             child: Container(
-              width: 200, height: 200,
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -448,7 +499,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
         Positioned(
-          bottom: 30, left: 0, right: 0,
+          bottom: 30,
+          left: 0,
+          right: 0,
           child: Column(
             children: [
               ScaleTransition(
@@ -460,38 +513,56 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: Stack(
                       children: [
                         Container(
-                          width: 110, height: 110,
+                          width: 110,
+                          height: 110,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: const Color(0xFF1A1A1A),
                             border: Border.all(
-                                color: kGreen.withOpacity(0.6), width: 2.5),
+                              color: kGreen.withOpacity(0.6),
+                              width: 2.5,
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                  color: kGreen.withOpacity(0.15),
-                                  blurRadius: 24,
-                                  spreadRadius: 4),
+                                color: kGreen.withOpacity(0.15),
+                                blurRadius: 24,
+                                spreadRadius: 4,
+                              ),
                             ],
                           ),
                           child: profilePicUrl != null
                               ? ClipOval(
-                                  child: Image.network(profilePicUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const Icon(
-                                          Icons.person,
-                                          color: Colors.white38,
-                                          size: 50)))
-                              : const Icon(Icons.person,
-                                  color: Colors.white38, size: 50),
+                                  child: Image.network(
+                                    profilePicUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.person,
+                                      color: Colors.white38,
+                                      size: 50,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.person,
+                                  color: Colors.white38,
+                                  size: 50,
+                                ),
                         ),
                         Positioned(
-                          bottom: 4, right: 4,
+                          bottom: 4,
+                          right: 4,
                           child: Container(
-                            width: 28, height: 28,
+                            width: 28,
+                            height: 28,
                             decoration: const BoxDecoration(
-                                color: kGreen, shape: BoxShape.circle),
-                            child: const Icon(Icons.camera_alt,
-                                color: Colors.white, size: 13),
+                              color: kGreen,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 13,
+                            ),
                           ),
                         ),
                       ],
@@ -502,19 +573,23 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 14),
               FadeTransition(
                 opacity: _avatarFadeAnim,
-                child: Text(fullName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2)),
+                child: Text(
+                  fullName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
               ),
               const SizedBox(height: 4),
               FadeTransition(
                 opacity: _avatarFadeAnim,
-                child: Text(email ?? '',
-                    style: TextStyle(
-                        color: Colors.grey.shade500, fontSize: 13)),
+                child: Text(
+                  email ?? '',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                ),
               ),
             ],
           ),
@@ -531,7 +606,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: GestureDetector(
           onTap: () => Navigator.maybePop(context),
           child: Container(
-            width: 45, height: 45,
+            width: 45,
+            height: 45,
             decoration: BoxDecoration(
               color: const Color(0xFF111A13),
               borderRadius: BorderRadius.circular(10),
@@ -547,12 +623,15 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildSectionLabel(String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Text(label,
-          style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.6)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.grey.shade600,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.6,
+        ),
+      ),
     );
   }
 
@@ -563,8 +642,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         icon: Icons.camera_alt_outlined,
         title: "Profile Picture",
         value: profilePicUrl != null ? "Tap to change or remove" : "Not set",
-        valueColor:
-            profilePicUrl != null ? kGreen : Colors.grey.shade700,
+        valueColor: profilePicUrl != null ? kGreen : Colors.grey.shade700,
         trailingIcon: Icons.add_a_photo_outlined,
         onTap: _onPickImage,
         showDivider: true,
@@ -619,8 +697,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         icon: Icons.alternate_email_rounded,
         title: "E-mail",
         value: (email == null || email!.isEmpty) ? "Not set" : email!,
-        valueColor:
-            (email == null || email!.isEmpty) ? Colors.grey.shade700 : kGreen,
+        valueColor: (email == null || email!.isEmpty)
+            ? Colors.grey.shade700
+            : kGreen,
         trailingIcon: Icons.mail_outline_rounded,
         onTap: () => _showEditSheet(
           fieldLabel: "E-mail",
@@ -642,9 +721,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         showDivider: true,
         onLongPress: birthday != null
             ? () => _confirmDelete(
-                  label: "birthday",
-                  onConfirm: () => _deleteField('birthday'),
-                )
+                label: "birthday",
+                onConfirm: () => _deleteField('birthday'),
+              )
             : null,
       ),
       _buildRow(
@@ -705,11 +784,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                 highlightColor: kGreen.withOpacity(0.03),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 17),
+                    horizontal: 20,
+                    vertical: 17,
+                  ),
                   child: Row(
                     children: [
                       Container(
-                        width: 38, height: 38,
+                        width: 38,
+                        height: 38,
                         decoration: BoxDecoration(
                           color: kGreen.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(10),
@@ -721,27 +803,37 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(title,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500)),
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                             const SizedBox(height: 3),
-                            Text(value,
-                                style: TextStyle(
-                                    color: valueColor ?? Colors.grey.shade700,
-                                    fontSize: 12.5)),
+                            Text(
+                              value,
+                              style: TextStyle(
+                                color: valueColor ?? Colors.grey.shade700,
+                                fontSize: 12.5,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       Container(
-                        width: 28, height: 28,
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.04),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(trailingIcon,
-                            color: Colors.grey.shade700, size: 15),
+                        child: Icon(
+                          trailingIcon,
+                          color: Colors.grey.shade700,
+                          size: 15,
+                        ),
                       ),
                     ],
                   ),
@@ -750,10 +842,11 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             if (showDivider)
               Divider(
-                  color: Colors.white.withOpacity(0.04),
-                  height: 1,
-                  indent: 72,
-                  endIndent: 20),
+                color: Colors.white.withOpacity(0.04),
+                height: 1,
+                indent: 72,
+                endIndent: 20,
+              ),
           ],
         ),
       ),
@@ -773,13 +866,17 @@ class _ProfileScreenState extends State<ProfileScreen>
             shadowColor: kGreen.withOpacity(0.3),
             elevation: 4,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
-          child: const Text("Logout",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600)),
+          child: const Text(
+            "Logout",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ),
     );
@@ -800,11 +897,14 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: const Color(0xFF181818),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         return Padding(
           padding: EdgeInsets.only(
-            left: 20, right: 20, top: 24,
+            left: 20,
+            right: 20,
+            top: 24,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
           ),
           child: Column(
@@ -815,11 +915,14 @@ class _ProfileScreenState extends State<ProfileScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Edit $fieldLabel",
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600)),
+                  Text(
+                    "Edit $fieldLabel",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   if (canDelete && onDelete != null)
                     GestureDetector(
                       onTap: () {
@@ -828,16 +931,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                              color: Colors.red.withOpacity(0.3)),
+                            color: Colors.red.withOpacity(0.3),
+                          ),
                         ),
-                        child: const Text("Remove",
-                            style: TextStyle(
-                                color: Colors.redAccent, fontSize: 12)),
+                        child: const Text(
+                          "Remove",
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -855,14 +965,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                   hintText: hintText ?? "Enter $fieldLabel",
                   hintStyle: TextStyle(color: Colors.grey.shade700),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none),
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
                   focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide:
-                          const BorderSide(color: kGreen, width: 1.5)),
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: kGreen, width: 1.5),
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -873,8 +986,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                   onPressed: () {
                     final val = controller.text.trim();
                     if (val.isEmpty && !canDelete) {
-                      _showToast("$fieldLabel cannot be empty",
-                          isSuccess: false);
+                      _showToast(
+                        "$fieldLabel cannot be empty",
+                        isSuccess: false,
+                      );
                       return;
                     }
                     Navigator.pop(ctx);
@@ -883,14 +998,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kGreen,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     elevation: 0,
                   ),
-                  child: const Text("Save",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    "Save",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -906,18 +1025,22 @@ class _ProfileScreenState extends State<ProfileScreen>
         context: context,
         backgroundColor: const Color(0xFF181818),
         shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         builder: (ctx) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _sheetHandle(),
-              const Text("Birthday",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600)),
+              const Text(
+                "Birthday",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -925,8 +1048,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                   backgroundColor: Color(0xFF1A3A26),
                   child: Icon(Icons.edit_calendar_outlined, color: kGreen),
                 ),
-                title: const Text("Change birthday",
-                    style: TextStyle(color: Colors.white)),
+                title: const Text(
+                  "Change birthday",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () async {
                   Navigator.pop(ctx);
                   await _showDatePickerDialog();
@@ -936,11 +1061,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                 contentPadding: EdgeInsets.zero,
                 leading: const CircleAvatar(
                   backgroundColor: Color(0xFF2A1010),
-                  child:
-                      Icon(Icons.delete_outline, color: Colors.redAccent),
+                  child: Icon(Icons.delete_outline, color: Colors.redAccent),
                 ),
-                title: const Text("Remove birthday",
-                    style: TextStyle(color: Colors.redAccent)),
+                title: const Text(
+                  "Remove birthday",
+                  style: TextStyle(color: Colors.redAccent),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _confirmDelete(
@@ -987,62 +1113,72 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       backgroundColor: const Color(0xFF181818),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _sheetHandle(),
-            const Text("Select Gender",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
+            const Text(
+              "Select Gender",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
-            ...options.map((option) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 22, height: 22,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: gender == option
-                            ? kGreen
-                            : Colors.grey.shade700,
-                        width: 2,
-                      ),
-                      color: gender == option
-                          ? kGreen.withOpacity(0.2)
-                          : Colors.transparent,
+            ...options.map(
+              (option) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: gender == option ? kGreen : Colors.grey.shade700,
+                      width: 2,
                     ),
-                    child: gender == option
-                        ? const Icon(Icons.check, color: kGreen, size: 14)
-                        : null,
+                    color: gender == option
+                        ? kGreen.withOpacity(0.2)
+                        : Colors.transparent,
                   ),
-                  title: Text(
-                    option[0].toUpperCase() + option.substring(1),
-                    style: TextStyle(
-                      color: gender == option ? kGreen : Colors.white,
-                      fontWeight: gender == option
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
+                  child: gender == option
+                      ? const Icon(Icons.check, color: kGreen, size: 14)
+                      : null,
+                ),
+                title: Text(
+                  option[0].toUpperCase() + option.substring(1),
+                  style: TextStyle(
+                    color: gender == option ? kGreen : Colors.white,
+                    fontWeight: gender == option
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _updateField({'gender': option});
-                  },
-                )),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _updateField({'gender': option});
+                },
+              ),
+            ),
             if (gender != null) ...[
               Divider(color: Colors.white.withOpacity(0.06)),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.delete_outline,
-                    color: Colors.redAccent, size: 20),
-                title: const Text("Remove gender",
-                    style: TextStyle(color: Colors.redAccent)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.redAccent,
+                  size: 20,
+                ),
+                title: const Text(
+                  "Remove gender",
+                  style: TextStyle(color: Colors.redAccent),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _confirmDelete(
@@ -1065,7 +1201,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       backgroundColor: const Color(0xFF181818),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: Column(
@@ -1073,25 +1210,33 @@ class _ProfileScreenState extends State<ProfileScreen>
           children: [
             _sheetHandle(),
             Container(
-              width: 64, height: 64,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
                 color: Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.logout_rounded,
-                  color: Colors.redAccent, size: 30),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Colors.redAccent,
+                size: 30,
+              ),
             ),
             const SizedBox(height: 16),
-            const Text("Logout",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold)),
+            const Text(
+              "Logout",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text("Are you sure you want to logout?",
-                textAlign: TextAlign.center,
-                style:
-                    TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            Text(
+              "Are you sure you want to logout?",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            ),
             const SizedBox(height: 28),
             Row(
               children: [
@@ -1101,11 +1246,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white24),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Cancel",
-                        style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1117,25 +1265,28 @@ class _ProfileScreenState extends State<ProfileScreen>
                         context: context,
                         barrierDismissible: false,
                         builder: (_) => const Center(
-                          child:
-                              CircularProgressIndicator(color: kGreen),
+                          child: CircularProgressIndicator(color: kGreen),
                         ),
                       );
                       // Sign out from Firebase
                       await FirebaseAuth.instance.signOut();
                       if (mounted) {
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                            '/auth', (route) => false);
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/auth', (route) => false);
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Logout",
-                        style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      "Logout",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],
@@ -1149,7 +1300,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _sheetHandle() {
     return Center(
       child: Container(
-        width: 36, height: 4,
+        width: 36,
+        height: 4,
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
           color: Colors.white12,
@@ -1167,19 +1319,24 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 72, height: 72,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 color: Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline,
-                  color: Colors.redAccent, size: 36),
+              child: const Icon(
+                Icons.error_outline,
+                color: Colors.redAccent,
+                size: 36,
+              ),
             ),
             const SizedBox(height: 20),
-            Text(_error!,
-                textAlign: TextAlign.center,
-                style:
-                    const TextStyle(color: Colors.white60, fontSize: 14)),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white60, fontSize: 14),
+            ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _loadProfile,
@@ -1188,7 +1345,8 @@ class _ProfileScreenState extends State<ProfileScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: kGreen,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -1208,11 +1366,7 @@ class _RadialBgPainter extends CustomPainter {
       ..shader = RadialGradient(
         center: Alignment.center,
         radius: 1.0,
-        colors: const [
-          Color(0xFF103E23),
-          Color(0xFF000302),
-          Color(0xFF000503),
-        ],
+        colors: const [Color(0xFF103E23), Color(0xFF000302), Color(0xFF000503)],
         stops: const [0.0, 0.72, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
     canvas.drawRect(Offset.zero & size, paint);
@@ -1248,7 +1402,9 @@ class _ToastWidgetState extends State<_ToastWidget>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
     _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     _slide = Tween<Offset>(
       begin: const Offset(0, -0.3),
@@ -1296,10 +1452,11 @@ class _ToastWidgetState extends State<_ToastWidget>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (widget.isSuccess
-                            ? const Color(0xFF22C55E)
-                            : Colors.redAccent)
-                        .withOpacity(0.2),
+                    color:
+                        (widget.isSuccess
+                                ? const Color(0xFF22C55E)
+                                : Colors.redAccent)
+                            .withOpacity(0.2),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -1318,11 +1475,14 @@ class _ToastWidgetState extends State<_ToastWidget>
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(widget.message,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500)),
+                    child: Text(
+                      widget.message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
