@@ -221,8 +221,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                         ),
                         const SizedBox(height: 12),
                         TextButton(
-                          onPressed: () => Navigator.popUntil(
-                              context, (r) => r.isFirst),
+                          onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                              context, '/home', (r) => false),
                           child: const Text(
                             'Back to Home',
                             style: TextStyle(
@@ -385,7 +385,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       builder: (_) => _PaymentSuccessDialog(
         onDone: () {
           Navigator.pop(context); // close dialog
-          Navigator.popUntil(context, (r) => r.isFirst);
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false);
         },
       ),
     );
