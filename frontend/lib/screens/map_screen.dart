@@ -588,11 +588,12 @@ class _MapScreenState extends State<MapScreen>
     _storesCtrl.reset();
 
     try {
+      // Calls backend which uses Geoapify Places API
       final stores = await ApiService.getNearbyStores(
           loc.latitude, loc.longitude, radiusM: 5000);
       if (mounted) {
         setState(() {
-          // If API returns empty, show fallback hardcoded stores
+          // If API returns empty or fails, show fallback stores
           _stores = stores.isNotEmpty ? stores : _fallbackStores(loc);
           _loadingStores = false;
         });

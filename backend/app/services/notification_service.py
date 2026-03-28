@@ -8,10 +8,10 @@ from google.oauth2 import service_account
 from datetime import datetime
 from dotenv import load_dotenv
 
-# ── Load .env file ─────────────────────────────────────────────────────
+# Load .env file 
 load_dotenv()
 
-# ── Firebase connection directly here (no __init__.py needed) ──────────
+# Firebase connection directly
 if not firebase_admin._apps:
     cred = credentials.Certificate(
         os.getenv(
@@ -23,7 +23,7 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# ── FCM v1 API setup ───────────────────────────────────────────────────
+# FCM v1 API setup 
 FCM_URL = "https://fcm.googleapis.com/v1/projects/flutter-fitness-app-ea9be/messages:send"
 SERVICE_ACCOUNT_FILE = os.getenv(
     "FIREBASE_KEY_PATH",
@@ -111,7 +111,7 @@ class NotificationService:
         if not token:
             return False
 
-        title = "🛒 Added to Cart!"
+        title = "Added to Cart!"
         body = (
             f"{ingredient_name} has been added to your cart"
             + (f" for {recipe_name}" if recipe_name else "") + "."
@@ -133,7 +133,7 @@ class NotificationService:
 
         return await self._send_push(
             fcm_token=token,
-            title="❤️ Recipe Saved!",
+            title="Recipe Saved!",
             body=f'"{recipe_name}" has been saved to your favourites.',
             data={"type": "save_recipe", "recipe_id": recipe_id,
                   "recipe_name": recipe_name}
@@ -152,7 +152,7 @@ class NotificationService:
         rank_text = f" — #{trending_rank} trending!" if trending_rank else ""
         return await self._send_push(
             fcm_token=token,
-            title="🔥 Trending Recipe Alert!",
+            title="Trending Recipe Alert!",
             body=f'"{recipe_name}" is trending right now{rank_text}',
             data={"type": "trending_recipe", "recipe_id": recipe_id,
                   "recipe_name": recipe_name,
@@ -171,7 +171,7 @@ class NotificationService:
 
         return await self._send_push(
             fcm_token=token,
-            title="✅ Order Confirmed!",
+            title="Order Confirmed!",
             body=f"Your order of {item_count} item(s) from {store_name} has been confirmed.",
             data={"type": "order_confirmed", "order_id": order_id,
                   "store_name": store_name, "item_count": str(item_count)}
@@ -190,15 +190,15 @@ class NotificationService:
             return False
 
         if goal_reached:
-            title = "🏆 Fitness Goal Reached!"
+            title = "Fitness Goal Reached!"
             body  = "Amazing work! You've hit your fitness goal for today!"
         elif workout_name:
-            title = f"💪 {workout_name} Complete!"
+            title = f"{workout_name} Complete!"
             body  = f"Great job finishing {workout_name}!"
             if calories_burned:
                 body += f" You burned {calories_burned:.0f} kcal."
         else:
-            title = "💪 Fitness Update"
+            title = "Fitness Update"
             parts = []
             if calories_burned:
                 parts.append(f"{calories_burned:.0f} kcal burned")
@@ -232,11 +232,11 @@ class NotificationService:
         if workouts_completed is not None:
             parts.append(f"{workouts_completed} workouts done")
         if goal_achieved:
-            parts.append("🎯 Goal achieved!")
+            parts.append("Goal achieved!")
 
         return await self._send_push(
             fcm_token=token,
-            title="📊 Weekly Progress Report!",
+            title="Weekly Progress Report!",
             body=" · ".join(parts),
             data={"type": "weekly_progress",
                   "week_number": str(week_number),

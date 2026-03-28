@@ -6,7 +6,7 @@ def upsert_onboarding(user_id: str, data: dict) -> dict:
     db = get_firebase_db()
     data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-    # ── Stored inside users/{uid}/onboarding/data ──
+    # Stored inside users/{uid}/onboarding/data 
     doc_ref = (
         db.collection("users")
           .document(user_id)

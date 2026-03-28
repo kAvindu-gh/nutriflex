@@ -16,7 +16,7 @@ def init_firebase():
         cred = credentials.Certificate(key_path)
         firebase_admin.initialize_app(cred)
     _db = firestore.client()
-    print("✅ Firebase Firestore initialized")
+    print("Firebase Firestore initialized !")
 
 
 def get_db() -> firestore.Client:
@@ -35,7 +35,7 @@ get_firestore = get_db
 get_firebase_db = get_db
 
 
-# ── Scoped collection helpers ──────────────────────────────────────────────────
+# Scoped collection helpers
 
 def get_cart_collection(user_id: str):
     """Path: users/{user_id}/cart"""

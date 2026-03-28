@@ -587,11 +587,9 @@ class ApiService {
   //  MAP
   // ───────────────────────────────────────────────────────────────────────────
 
-
-  // FIX: router is registered at /api/v1/map (not /map)
   static const String _mapBase = '$kBaseUrl/api/v1/map';
  
-  /// Get real nearby stores via Overpass API (OpenStreetMap)
+  // ── Nearby stores via Geoapify (called through backend) ───────────────────
   static Future<List<NearbyStore>> getNearbyStores(
     double lat,
     double lng, {
@@ -604,18 +602,19 @@ class ApiService {
             headers: _headers,
             body: jsonEncode({'lat': lat, 'lng': lng, 'radius_m': radiusM}),
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 15));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final List stores = data['stores'] ?? [];
         return stores.map((s) => NearbyStore.fromJson(s)).toList();
       }
-    } catch (_) {}
-    // Return empty list — map_screen handles fallback
-    return [];
+    } catch (e) {
+      print('getNearbyStores error: $e');
+    }
+    return []; // map_screen handles empty with its own fallback
   }
  
-  /// Convert lat/lng to readable address via backend Nominatim
+  // ── Reverse geocode via backend Nominatim ─────────────────────────────────
   static Future<String> reverseGeocode(double lat, double lng) async {
     try {
       final res = await http
@@ -631,7 +630,7 @@ class ApiService {
     return '$lat, $lng';
   }
  
-  /// Place an order — saves to Firestore, clears cart
+  // ── Place order — saves to Firestore, clears cart ─────────────────────────
   static Future<Map<String, dynamic>> placeOrder({
     required NearbyStore store,
     required List<CartItem> cartItems,
@@ -668,6 +667,6 @@ class ApiService {
         )
         .timeout(const Duration(seconds: 15));
     if (res.statusCode == 200) return jsonDecode(res.body);
-    throw Exception('Failed to place order');
+    throw Exception('Failed to place order: ${res.statusCode}');
   }
 }
