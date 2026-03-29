@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import httpx
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -16,15 +17,20 @@ user_db = get_db()   # default Firebase project — users collection
 def _init_food_db():
     """Initialise the custom foods Firebase app and return its Firestore client."""
     app_name = "customfoods"
-    key_path = os.getenv(
-        "CUSTOMFOODS_FIREBASE_KEY_PATH",
-        "app/database/customfoods_firebase_key.json",
-    )
+
     # Only initialise once — reuse if already done
     try:
         food_app = firebase_admin.get_app(app_name)
     except ValueError:
-        cred = credentials.Certificate(key_path)
+        customfoods_key_json = os.getenv("CUSTOMFOODS_FIREBASE_KEY_JSON")
+        if customfoods_key_json:
+            # Railway: load from environment variable
+            key_json = json.loads(customfoods_key_json)
+            cred = credentials.Certificate(key_json)
+        else:
+            # Local: load from file path
+            key_path = os.getenv("CUSTOMFOODS_FIREBASE_KEY_PATH", "app/database/customfoods_firebase_key.json")
+            cred = credentials.Certificate(key_path)
         food_app = firebase_admin.initialize_app(cred, name=app_name)
 
     return firestore.client(app=food_app)
@@ -199,6 +205,19 @@ def get_consumed_amounts(access_token: str):
     return calories, fat, protein, carbs
 
 
+def get_requirements(access_token: str):
+    doc_ref = user_db.collection("users").document(access_token) \
+                     .collection("personal data").document("Daily Requirements")
+    doc  = doc_ref.get()
+    data = doc.to_dict() or {}
+    return {
+        "Calory_requirement_low":       data.get("Calory_requirement_low",       "2400kcal"),
+        "Protein_requirement_low":      data.get("protien_requirement_low",      "150g"),
+        "Carbohydrate_requirement_low": data.get("carbohydrate_requirement_low", "620g"),
+        "Fat_requirement_low":          data.get("fat_calory_requirements_low",  "220g"),
+    }
+
+
 @router.post("/add_physical_data_to_user")
 def add_physical_measurements(access_token: str, weight: int, height: float,
                                age: int, gender: str, activityLevel: str,
@@ -226,19 +245,6 @@ def add_requirements(access_token: str, Calory_requirement_low: str,
     doc_ref = user_db.collection("users").document(access_token) \
                      .collection("personal data").document("Daily Requirements")
     doc_ref.set(requirements)
-
-
-def get_requirements(access_token: str):
-    doc_ref = user_db.collection("users").document(access_token) \
-                     .collection("personal data").document("Daily Requirements")
-    doc  = doc_ref.get()
-    data = doc.to_dict() or {}
-    return {
-        "Calory_requirement_low":       data.get("Calory_requirement_low",       "2400kcal"),
-        "Protein_requirement_low":      data.get("protien_requirement_low",      "150g"),
-        "Carbohydrate_requirement_low": data.get("carbohydrate_requirement_low", "620g"),
-        "Fat_requirement_low":          data.get("fat_calory_requirements_low",  "220g"),
-    }
 
 
 @router.post("/Meal_Prep_With_Five_Cards")
