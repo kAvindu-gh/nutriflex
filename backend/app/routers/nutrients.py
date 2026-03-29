@@ -1,25 +1,36 @@
 import os
 import re
 import httpx
+import firebase_admin
+from firebase_admin import credentials, firestore
 from fastapi import APIRouter
 from datetime import datetime
 from dotenv import load_dotenv
-import firebase_admin
-from firebase_admin import credentials, firestore
-from app.services.usda_service import USDAService
-from ..services.bmi_service import BMIService
-from app.models.bmi_models import Gender, ActivityLevel, Goal
+from app.database.connection import get_db
 
 load_dotenv()
 
-usda_service = USDAService()
-db = usda_service.db
+user_db = get_db()   # default Firebase project — users collection
 
-# ── Firebase init ─────────────────────────────────────────────────────────────
-user_firebase_key_path = os.getenv("FIREBASE_KEY_PATH", "app/database/firebase_key.json")
-user_cred = credentials.Certificate(user_firebase_key_path)
-user_app  = firebase_admin.initialize_app(user_cred, name="user_app")
-user_db   = firestore.client(user_app)
+
+def _init_food_db():
+    """Initialise the custom foods Firebase app and return its Firestore client."""
+    app_name = "customfoods"
+    key_path = os.getenv(
+        "CUSTOMFOODS_FIREBASE_KEY_PATH",
+        "app/database/customfoods_firebase_key.json",
+    )
+    # Only initialise once — reuse if already done
+    try:
+        food_app = firebase_admin.get_app(app_name)
+    except ValueError:
+        cred = credentials.Certificate(key_path)
+        food_app = firebase_admin.initialize_app(cred, name=app_name)
+
+    return firestore.client(app=food_app)
+
+
+db = _init_food_db()   # custom foods Firebase project — rice, Mallum, Vegetables, etc.
 
 USDA_API_KEY = os.getenv("USDA_API_KEY")
 router = APIRouter()
@@ -50,14 +61,62 @@ def _format_value(number: float, unit: str) -> str:
     return str(number)
 
 
+# ── Collection name aliases ───────────────────────────────────────────────────
+#
+# Maps the collection name to the endpoint receives → all possible Firestore names.
+
+COLLECTION_ALIASES: dict[str, list[str]] = {
+    # rice
+    "rice":                ["rice", "Rice"],
+    "Rice":                ["rice", "Rice"],
+
+    # meat
+    "Meat or equivalents": ["Meat or equivalents", "Meat", "meat"],
+    "Meat":                ["Meat or equivalents", "Meat", "meat"],
+    "meat":                ["Meat or equivalents", "Meat", "meat"],
+
+    # vegetables
+    "Vegetables":          ["Vegetables", "vegetables", "Vegetable"],
+    "vegetables":          ["Vegetables", "vegetables", "Vegetable"],
+
+    # mallum
+    "Mallum":              ["Mallum", "mallum"],
+    "mallum":              ["Mallum", "mallum"],
+
+    # salads
+    "Salads":              ["Salads", "salad", "Salad"],
+    "salad":               ["Salads", "Salad", "salad"],
+    "Salad":               ["Salads", "Salad", "salad"],
+}
+
+
+def _lookup_food(food: str, food_type: str) -> dict | None:
+    """
+    Try to find a food document in Firestore.
+    Tries the given collection first, then all known aliases.
+    Returns the document dict, or None if not found.
+    """
+    candidates = [food_type] + [
+        alt for alt in COLLECTION_ALIASES.get(food_type, [])
+        if alt != food_type
+    ]
+
+    for collection in candidates:
+        doc = db.collection(collection).document(food).get()
+        if doc.exists:
+            return doc.to_dict()
+
+    return None
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/core_nutrients/")
 def get_nutrients(food: str, food_type: str):
-    doc = db.collection(food_type).document(food).get()
-    if not doc.exists:
-        return {"Error": "Food is not found"}
-    return doc.to_dict()
+    data = _lookup_food(food, food_type)
+    if data is None:
+        return {"Error": f"Food '{food}' not found in '{food_type}'"}
+    return data
 
 
 @router.get("/add_SriLankanfood_to_user")
@@ -65,9 +124,11 @@ def add_food(access_token: str, food: str, size: int, food_type: str):
     today    = datetime.now().date()
     time_now = datetime.now().time()
 
-    food_data_dict = get_nutrients(food, food_type)
-    if "Error" in food_data_dict:
-        return food_data_dict
+    food_data_dict = _lookup_food(food, food_type)
+
+    if food_data_dict is None:
+        print(f"Food not found: {food} in {food_type} — skipping")
+        return "skipped"
 
     # Scale nutrients by size (per 100g basis)
     per_size_nutrients = {}
@@ -79,9 +140,9 @@ def add_food(access_token: str, food: str, size: int, food_type: str):
     date_doc = str(today)
     time_doc = str(time_now)
 
-    doc_ref      = user_db.collection("users").document(access_token)\
-                          .collection("Nutrients_history").document(date_doc)
-    food_doc_ref = user_db.collection("users").document(access_token)\
+    doc_ref = user_db.collection("users").document(access_token) \
+                     .collection("Nutrients_history").document(date_doc)
+    food_doc_ref = user_db.collection("users").document(access_token) \
                           .collection("Meal_history").document(f"{date_doc}_{time_doc}")
 
     # Save food entry
@@ -92,17 +153,15 @@ def add_food(access_token: str, food: str, size: int, food_type: str):
     data = doc.to_dict()
 
     if not data:
-        # First food of the day — just set
         doc_ref.set(per_size_nutrients)
         return "added successfully"
 
     # Accumulate on top of existing nutrients
-    merged = dict(per_size_nutrients)  # start with new food values
+    merged = dict(per_size_nutrients)
     for nutrient, existing_value in data.items():
         existing_num, existing_unit = _parse_value(str(existing_value))
         new_num, new_unit           = _parse_value(merged.get(nutrient, "0"))
         total = existing_num + new_num
-        # Preserve original unit
         unit  = existing_unit if existing_unit else new_unit
         merged[nutrient] = _format_value(total, unit)
 
@@ -115,7 +174,7 @@ def get_consumed_amounts(access_token: str):
     today    = datetime.now().date()
     date_doc = str(today)
 
-    doc_ref = user_db.collection("users").document(access_token)\
+    doc_ref = user_db.collection("users").document(access_token) \
                      .collection("Nutrients_history").document(date_doc)
     doc     = doc_ref.get()
 
@@ -126,11 +185,15 @@ def get_consumed_amounts(access_token: str):
 
     calories = _parse_value(data.get("Energy(kcal)", "0"))[0]
     protein  = _parse_value(data.get("Proteins",      "0"))[0]
-    sfa      = _parse_value(data.get("SFA",            "0"))[0]
-    pufa     = _parse_value(data.get("PUFA",           "0"))[0]
-    mufa     = _parse_value(data.get("MUFA",           "0"))[0]
-    fat      = sfa + pufa + mufa
-    carbs    = _parse_value(data.get("Carbohydrates",  "0"))[0]
+
+    # Fat: try direct "Fat" field first, then fall back to fatty acid fractions
+    fat_direct = _parse_value(data.get("Fat",  "0"))[0]
+    sfa        = _parse_value(data.get("SFA",  "0"))[0]
+    pufa       = _parse_value(data.get("PUFA", "0"))[0]
+    mufa       = _parse_value(data.get("MUFA", "0"))[0]
+    fat        = fat_direct if fat_direct > 0 else (sfa + pufa + mufa)
+
+    carbs = _parse_value(data.get("Carbohydrates", "0"))[0]
 
     # Returns: (calories[0], fat[1], protein[2], carbs[3])
     return calories, fat, protein, carbs
@@ -140,7 +203,7 @@ def get_consumed_amounts(access_token: str):
 def add_physical_measurements(access_token: str, weight: int, height: float,
                                age: int, gender: str, activityLevel: str,
                                goal: str, BMI: str, TDEE: str, status: str):
-    doc_ref = user_db.collection("users").document(access_token)\
+    doc_ref = user_db.collection("users").document(access_token) \
                      .collection("personal data").document("Physical measurements")
     doc_ref.set({
         "weight": weight, "Height": height, "Age": age,
@@ -160,13 +223,13 @@ def add_requirements(access_token: str, Calory_requirement_low: str,
         "carbohydrate_requirement_low": f"{carbohydrate_requirement_low}g",
         "fat_calory_requirements_low":  f"{fat_calory_requirements_low}g",
     }
-    doc_ref = user_db.collection("users").document(access_token)\
+    doc_ref = user_db.collection("users").document(access_token) \
                      .collection("personal data").document("Daily Requirements")
     doc_ref.set(requirements)
 
 
 def get_requirements(access_token: str):
-    doc_ref = user_db.collection("users").document(access_token)\
+    doc_ref = user_db.collection("users").document(access_token) \
                      .collection("personal data").document("Daily Requirements")
     doc  = doc_ref.get()
     data = doc.to_dict() or {}
@@ -187,7 +250,7 @@ def add_meal_plan_to_user(access_token: str,
                            mallum: str,     mallum_size: str,
                            salad: str,      salad_size: str):
 
-    # Add each food to Firestore
+    # ── Add each food ─────────────────────────────────────────────────────────
     add_food(access_token, rice,       int(rice_size),       "rice")
     add_food(access_token, meat,       int(meat_size),       "Meat or equivalents")
     add_food(access_token, vegetable1, int(vegetable1_size), "Vegetables")
@@ -197,18 +260,17 @@ def add_meal_plan_to_user(access_token: str,
 
     # Get totals and requirements
     requirements = get_requirements(access_token)
-    # consumed: (calories[0], fat[1], protein[2], carbs[3])
-    consumed = get_consumed_amounts(access_token)
+    consumed     = get_consumed_amounts(access_token)
 
     cal_consumed  = consumed[0]
     fat_consumed  = consumed[1]
     prot_consumed = consumed[2]
     carb_consumed = consumed[3]
 
-    cal_req  = _parse_value(requirements["Calory_requirement_low"])[0]  or 2400
-    prot_req = _parse_value(requirements["Protein_requirement_low"])[0] or 150
+    cal_req  = _parse_value(requirements["Calory_requirement_low"])[0]       or 2400
+    prot_req = _parse_value(requirements["Protein_requirement_low"])[0]      or 150
     carb_req = _parse_value(requirements["Carbohydrate_requirement_low"])[0] or 620
-    fat_req  = _parse_value(requirements["Fat_requirement_low"])[0]     or 220
+    fat_req  = _parse_value(requirements["Fat_requirement_low"])[0]          or 220
 
     def _pct(consumed_val: float, req: float) -> float:
         if req == 0:
@@ -229,3 +291,30 @@ def add_meal_plan_to_user(access_token: str,
         "Fat requirement: ":                  f"{fat_req}g",
         "Fat consumed percentage: ":          _pct(fat_consumed,  fat_req),
     }
+
+
+# ── Debug endpoint — remove after confirming food DB works ───────────────────
+
+@router.get("/debug/test_food_db")
+def test_food_db():
+    """
+    Hit GET /debug/test_food_db to confirm both databases are connected.
+    food_db should list document IDs from rice, Mallum, etc.
+    user_db should list user document IDs.
+    """
+    results = {"food_db": {}, "user_db": {}}
+
+    for collection in ["rice", "Mallum", "Vegetables", "Meat or equivalents", "Salads"]:
+        try:
+            docs = list(db.collection(collection).limit(5).stream())
+            results["food_db"][collection] = [d.id for d in docs]
+        except Exception as e:
+            results["food_db"][collection] = f"ERROR: {e}"
+
+    try:
+        users = list(user_db.collection("users").limit(3).stream())
+        results["user_db"]["users"] = [d.id for d in users]
+    except Exception as e:
+        results["user_db"]["users"] = f"ERROR: {e}"
+
+    return results

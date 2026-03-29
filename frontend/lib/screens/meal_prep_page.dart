@@ -379,7 +379,9 @@ class _MealPrepPageState extends State<MealPrepPage>
 
   // ── Nutrition card ────────────────────────────────────────────────────────
   Widget _buildNutritionCard() {
-    return Container(
+    return AnimatedBuilder(
+      animation: _progressCtrl,
+      builder: (_, __) => Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: const Color(0xFF0A1A0F),
@@ -435,13 +437,16 @@ class _MealPrepPageState extends State<MealPrepPage>
                   _fatAnim.value, "g", Colors.blueAccent),
             ],
           ),
-        );
+        ),
+    );
   }
 
   Widget _nutrientBar(String label, double consumed, double max,
       double animPct, String unit, Color color) {
-    final pct = max > 0 ? (consumed / max).clamp(0.0, 1.0) : 0.0;
+    final pct        = max > 0 ? (consumed / max).clamp(0.0, 1.0) : 0.0;
     final displayPct = (pct * 100).round();
+    // animPct drives the bar width for smooth animation
+    final barWidth   = animPct.clamp(0.0, 1.0);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -491,9 +496,8 @@ class _MealPrepPageState extends State<MealPrepPage>
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          // Use actual pct — not animPct — for reliable bar fill
           FractionallySizedBox(
-            widthFactor: pct,
+            widthFactor: barWidth,
             child: Container(
               height: 8,
               decoration: BoxDecoration(

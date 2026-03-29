@@ -34,6 +34,7 @@
 - [API Reference](#-api-reference)
 - [Team](#-team)
 
+
 ---
 
 ## 🌿 Overview
@@ -89,6 +90,27 @@ We built NutriFlex from scratch with:
 - Animated progress bars for Calories, Protein, Carbs, Fat
 - Daily accumulation — tracks everything eaten throughout the day
 
+### 🗺️ Store Locator & Order Placement
+- Interactive map powered by **Flutter Map** with OpenStreetMap tiles
+- Detects user's current GPS location automatically
+- Reverse geocoding via **Nominatim API** to display human-readable location name
+- Nearby health food stores fetched using **Geoapify Places API** within a configurable radius
+- Each store card shows:
+  - Distance (km) and estimated travel time
+  - Star rating
+  - Ingredient availability percentage with animated progress bar
+  - Warning banner when availability is below 90%
+- Tap **Select Store** to proceed to cart checkout for that store
+- Location can be manually changed via the **Change** button
+
+### 🛒 Shopping Cart
+- Add recipes and meal items to a persistent cart stored in Firestore (`users/{uid}/cart`)
+- Cart supports quantity updates, individual item removal, and full cart clear
+- Promo code support with backend validation
+- Order summary with subtotal, delivery fee, discount, and total
+- **Place Order** flow — saves the order to Firestore and triggers an order confirmation notification
+- Cart state synced via `ApiService` with live Firestore reads on page load
+
 ### 🔔 Notifications
 - Firebase Cloud Messaging (FCM) integration
 - 7 notification types: Cart, Recipe, Trending, Order, Fitness, Progress, Broadcast
@@ -117,6 +139,7 @@ We built NutriFlex from scratch with:
 | Push Notifications | Firebase Cloud Messaging |
 | Image Storage | Cloudinary |
 | Food Data | USDA FoodData Central API |
+| Map & Store Discovery | Geoapify Places API + Nominatim (OpenStreetMap) |
 | State Management | Provider (CalorieProvider) |
 | Local Storage | SharedPreferences |
 | HTTP Client | `http` package (Dart) |
@@ -149,6 +172,7 @@ We built NutriFlex from scratch with:
 │  /Meal_Prep_With_Five_Cards                         │
 │  /api/v1/profile    /notifications/*                │
 │  /core_nutrients    /add_SriLankanfood_to_user      │
+│  /api/v1/map/*      /api/v1/cart/*                  │
 └───────────┬────────────────────┬────────────────────┘
             │                    │
             ▼                    ▼
@@ -157,7 +181,9 @@ We built NutriFlex from scratch with:
 │  Firestore       │  │  USDA FoodData Central       │
 │  Firebase Auth   │  │  Cloudinary (images)         │
 │  Firebase FCM    │  │  Google OAuth                │
-└──────────────────┘  └──────────────────────────────┘
+└──────────────────┘  │  Geoapify (store discovery)  │
+                      │  Nominatim (reverse geocode) │
+                      └──────────────────────────────┘
 ```
 
 ---
@@ -178,6 +204,8 @@ NutriFlex/
 │   │   │   ├── home_page.dart         # Recipe feed + search
 │   │   │   ├── bmi_screen.dart        # BMI calculator
 │   │   │   ├── meal_prep_page.dart    # 6-card meal builder
+│   │   │   ├── map_screen.dart        # Store locator + order placement
+│   │   │   ├── cart_screen.dart       # Shopping cart + checkout
 │   │   │   ├── notification_page.dart # Alerts + weekly summary
 │   │   │   └── userProfile.dart       # Profile management
 │   │   ├── services/
@@ -334,6 +362,7 @@ service cloud.firestore {
 lib/services/firebase_options.dart
 android/app/google-services.json
 backend/app/database/firebase_key.json
+backend/app/database/customfoods_firebase_key.json
 backend/.env
 ```
 
@@ -347,6 +376,9 @@ Create `backend/.env`:
 # Firebase service account key path
 FIREBASE_KEY_PATH=app/database/firebase_key.json
 
+# Second Firebase project — custom Sri Lankan food database
+CUSTOMFOODS_FIREBASE_KEY_PATH=app/database/customfoods_firebase_key.json
+
 # USDA FoodData Central API
 USDA_API_KEY=your_usda_api_key_here
 
@@ -354,6 +386,9 @@ USDA_API_KEY=your_usda_api_key_here
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+
+# Geoapify (nearby store discovery)
+GEOAPIFY_API_KEY=your_geoapify_api_key_here
 ```
 
 Get your USDA API key free at [fdc.nal.usda.gov](https://fdc.nal.usda.gov/api-guide.html)
@@ -383,6 +418,15 @@ http://YOUR_IP:8000
 | `PATCH` | `/api/v1/profile/{uid}` | Update profile fields |
 | `DELETE` | `/api/v1/profile/{uid}/field` | Delete a profile field |
 | `POST` | `/api/v1/profile/{uid}/upload-picture` | Upload profile photo |
+| `POST` | `/api/v1/map/nearby-stores` | Find nearby stores via Geoapify |
+| `GET` | `/api/v1/map/reverse-geocode` | Reverse geocode via Nominatim |
+| `POST` | `/api/v1/map/{uid}/place-order` | Place an order |
+| `GET` | `/api/v1/cart/{uid}` | Get user cart |
+| `POST` | `/api/v1/cart/{uid}/add` | Add item to cart |
+| `DELETE` | `/api/v1/cart/{uid}/remove/{id}` | Remove item from cart |
+| `PATCH` | `/api/v1/cart/{uid}/quantity/{id}` | Update item quantity |
+| `DELETE` | `/api/v1/cart/{uid}/clear` | Clear entire cart |
+| `POST` | `/api/v1/cart/{uid}/promo` | Apply promo code |
 | `POST` | `/notifications/register-token` | Register FCM token |
 | `POST` | `/notifications/broadcast` | Broadcast to all users |
 
@@ -425,7 +469,7 @@ POST /Meal_Prep_With_Five_Cards?
 | Member | Role |
 |--------|------|
 | **Matheesha** | Backend — BMI, Meal prep, Home |
-| **Kavindu** | Backend — Onboarding, Login/Signup, Home|
+| **Kavindu** | Backend — Onboarding, Login/Signup, Home, Map |
 | **Senuja** | Backend — Userprofile, Map, Cart |
 | **Hasith** | Frontend — Login/Signup, Cart, Meal prep |
 | **Abdul** | Frontend — BMI, Map, Onboarding|

@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/map_screen.dart';
 
 // ─── Base URL — change ONLY this one line when your IP changes ────────────────
-const String kBaseUrl = 'http://192.168.1.3:8000';
+const String kBaseUrl = 'http://192.168.8.132:8000';
 
 // ─── Data Models ──────────────────────────────────────────────────────────────
 
