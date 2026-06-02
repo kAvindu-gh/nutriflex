@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/map_screen.dart';
 
-// ─── Base URL — change ONLY this one line when your IP changes ────────────────
-//const String kBaseUrl = 'http://192.168.8.132:8000';
+// add or change the below backend deployment link as you wish
 const String kBaseUrl = 'https://nutriflex-production.up.railway.app';
 
 // ─── Data Models ──────────────────────────────────────────────────────────────
